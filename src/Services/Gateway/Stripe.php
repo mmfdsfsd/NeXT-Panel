@@ -122,6 +122,16 @@ final class Stripe extends Base
                     ],
                 ],
                 'mode' => 'payment',
+                 'payment_method_types' => [
+						"wechat_pay",
+						"alipay",
+						"card",	
+					],
+				'payment_method_options'=> [
+					'wechat_pay' => [
+					  'client' => 'web',
+					],
+				],                                          
                 'payment_intent_data' => [
                     'metadata' => [
                         'trade_no' => $pl->tradeno,
@@ -165,10 +175,16 @@ final class Stripe extends Base
         if ($event->type === 'payment_intent.succeeded' && $payment_intent->status === 'succeeded') {
             $this->postPayment($payment_intent->metadata->trade_no);
 
-            return $response->withStatus(204);
+             return $response->withJson([
+                'ret' => 1,
+                'msg' => 'Payment success',
+            ]);
         }
 
-        return $response->withStatus(400);
+       return $response->withJson([
+            'ret' => 0,
+            'msg' => 'Payment failed',
+        ]);
     }
 
     /**
