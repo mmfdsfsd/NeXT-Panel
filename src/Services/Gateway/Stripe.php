@@ -129,7 +129,7 @@ final class Stripe extends Base
 		],
 		'payment_method_options'=> [
 		    'wechat_pay' => [
-		    'client' => 'web',
+		        'client' => 'web',
 		    ],
 		],                                          
                 'payment_intent_data' => [
