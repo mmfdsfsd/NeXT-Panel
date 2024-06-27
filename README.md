@@ -8,7 +8,7 @@
 
 [![X (formerly Twitter)](https://img.shields.io/twitter/url?url=https%3A%2F%2Ftwitter.com%2FSSPanel_NeXT)](https://twitter.com/SSPanel_NeXT)
 [![Discord](https://img.shields.io/discord/1049692075085549600?color=5865F2&label=Discord&style=flat-square)](https://discord.gg/A7uFKCvf8V)
-
+仅做备份，感谢原作者们的辛勤付出！！
 ## PSA
 
 We are looking for a new co-maintainer for this project who is familiar with PHP
