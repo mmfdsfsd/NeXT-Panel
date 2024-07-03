@@ -49,7 +49,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-check">
-                            <input id="tos" type="checkbox" class="form-check-input"/>
+                            <input id="tos" type="checkbox" checked='checked' class="form-check-input"/>
                             <span class="form-check-label">
                                     我已阅读并同意 <a href="/tos" tabindex="-1"> 服务条款与隐私政策 </a>
                                 </span>
@@ -71,7 +71,7 @@
                                     {if $public_setting['enable_reg_captcha']}
                                         {include file='captcha/ajax.tpl'}
                                     {/if}
-                                    name: document.getElementById("name").value,
+                                    name: document.getElementById("email").value,
                                     email: document.getElementById("email").value,
                                     password: document.getElementById("password").value,
                                     confirm_password: document.getElementById("confirm_password").value,
