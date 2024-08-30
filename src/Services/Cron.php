@@ -266,7 +266,7 @@ final class Cron
                     $activated_order = null; // 先检查过期，再激活新订单，避免服务中断
                 }
 		//订单时间未到期且可用流量为0，将订单标进行过期处理
-		if ($activated_order->update_time + $content->time * 86400 > time() && $user->transfer_enable <=0 ) {
+		if ($activated_order->update_time + $content->time * 86400 > time() && $user->transfer_enable <= 0 ) {
 				
                     $activated_order->status = 'expired';
                     $activated_order->update_time = time();
