@@ -255,10 +255,9 @@ final class Cron
             // 如果用户账户中有已激活的TABP订单，则判断是否过期
             if ($activated_order !== null) {
                 $content = json_decode($activated_order->product_content);
-
-              //订单时间到期或者可用流量为0，则将订单标进行过期处理
-               if ($activated_order->update_time + $content->time * 86400 < time() || ($unused_traffic <= 0)) {
-				
+		$user_traffic_left = $user->transfer_enable - $user->u - $user->d;
+		//订单时间到期或者可用流量为0，则将订单标进行过期处理 $user_traffic_left
+               if ($activated_order->update_time + $content->time * 86400 < time() || ($user_traffic_left <= 0)) {				
                     $activated_order->status = 'expired';
                     $activated_order->update_time = time();
                     $activated_order->save();
