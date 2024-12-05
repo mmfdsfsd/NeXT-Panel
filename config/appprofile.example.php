@@ -45,13 +45,38 @@ $_ENV['V2RayJson_Config'] = [
 
 $_ENV['SingBox_Config'] = [
     'log' => [
+        'disabled' => false,
         'level' => 'error',
+        'timestamp' => true,
     ],
     'dns' => [
         'servers' => [
             [
                 'tag' => 'local',
                 'address' => 'local',
+                'detour' => 'direct',
+            ],
+            [
+                'tag' => 'resolver',
+                'address' => 'quic://223.6.6.6',
+                'strategy' => 'ipv4_only',
+                'detour' => 'direct',
+            ],
+            [
+                'tag' => 'cloudflare',
+                'address' => 'tls://one.one.one.one',
+                'address_resolver' => 'resolver',
+                'address_strategy' => 'ipv4_only',
+                'strategy' => 'prefer_ipv6',
+                'detour' => 'select',
+            ],
+            [
+                'tag' => 'fakeip',
+                'address' => 'fakeip',
+            ],
+            [
+                'tag' => 'block',
+                'address' => 'rcode://refused',
             ],
         ],
         'rules' => [
@@ -59,78 +84,114 @@ $_ENV['SingBox_Config'] = [
                 'outbound' => 'any',
                 'server' => 'local',
             ],
+            [
+                'clash_mode' => 'Global',
+                'server' => 'cloudflare',
+            ],
+            [
+                'clash_mode' => 'Rule',
+                'rule_set' => 'geosite-geolocation-!cn',
+                'server' => 'cloudflare',
+            ],
+            [
+                'clash_mode' => 'Rule',
+                'rule_set' => 'geosite-cn',
+                'server' => 'fakeip',
+            ],
+            [
+                'clash_mode' => 'Direct',
+                'server' => 'local',
+            ],
         ],
-        'final' => 'local',
-        'strategy' => 'prefer_ipv6',
+        'final' => 'cloudflare',
+        'fakeip' => [
+            'enabled' => true,
+            'inet4_range' => '198.18.0.0/15',
+            'inet6_range' => 'fc00::/18',
+        ],
+        'disable_cache' => true,
+        'independent_cache' => true,
     ],
     'inbounds' => [
         [
             'type' => 'tun',
-            'inet4_address' => '172.19.0.1/30',
+            'tag' => 'in',
+            'address' => [
+                '172.18.0.1/30',
+                'fdfe:dcba:9876::1/126',
+            ],
             'auto_route' => true,
             'strict_route' => true,
-            'endpoint_independent_nat' => true,
             'udp_timeout' => 60,
-            'platform' => [
-                'http_proxy' => [
-                    'enabled' => true,
-                    'server' => '127.0.0.1',
-                    'server_port' => 7891,
-                ],
-            ],
-            'sniff' => true,
-        ],
-        [
-            'type' => 'mixed',
-            'listen' => '127.0.0.1',
-            'listen_port' => 7891,
-            'sniff' => true,
-            'domain_strategy' => 'prefer_ipv6',
+            'stack' => 'mixed',
         ],
     ],
     'outbounds' => [
         [
+            'tag' => 'select',
             'type' => 'selector',
-            'tag' => 'default',
+            'outbounds' => [
+                'auto',
+            ],
+            'default' => 'auto',
+            'interrupt_exist_connections' => true,
+        ],
+        [
+			'tag' => 'auto',
+            'type' => 'urltest',           
             'outbounds' => [],
+            'url' => 'https://cp.cloudflare.com/generate_204',
+            'interval' => '3m',
+            'tolerance' => 50,
+            'idle_timeout' => '30m',
+            'interrupt_exist_connections' => true,
         ],
         [
             'type' => 'direct',
             'tag' => 'direct',
         ],
-        [
-            'type' => 'block',
-            'tag' => 'block',
-        ],
     ],
     'route' => [
         'rules' => [
+            [
+                'inbound' => 'in',
+                'action' => 'sniff',
+                'timeout' => '1s',
+            ],
+            [
+                'protocol' => 'dns',
+                'action' => 'hijack-dns',
+            ],
             [
                 'clash_mode' => 'Direct',
                 'outbound' => 'direct',
             ],
             [
                 'clash_mode' => 'Rule',
-                'outbound' => 'default',
+                'rule_set' => [
+                    'geosite-geolocation-!cn',
+                ],
+                'outbound' => 'select',
+            ],
+            [
+                'clash_mode' => 'Rule',
+                'rule_set' => [
+                    'geosite-cn',
+                    'geoip-cn',
+                ],
+                'outbound' => 'direct',
             ],
             [
                 'clash_mode' => 'Global',
-                'outbound' => 'default',
+                'outbound' => 'select',
             ],
             [
                 'protocol' => 'stun',
-                'outbound' => 'block',
+                'action' => 'reject',
+                'method' => 'default',
             ],
             [
                 'ip_is_private' => true,
-                'outbound' => 'direct',
-            ],
-            [
-                'rule_set' => 'geoip-cn',
-                'outbound' => 'direct',
-            ],
-            [
-                'rule_set' => 'geosite-cn',
                 'outbound' => 'direct',
             ],
         ],
@@ -141,6 +202,7 @@ $_ENV['SingBox_Config'] = [
                 'format' => 'binary',
                 'url' => 'https://' . $_ENV['jsdelivr_url'] . '/gh/SagerNet/sing-geoip@rule-set/geoip-cn.srs',
                 'download_detour' => 'direct',
+                'update_interval' => '1d',
             ],
             [
                 'tag' => 'geosite-cn',
@@ -148,17 +210,26 @@ $_ENV['SingBox_Config'] = [
                 'format' => 'binary',
                 'url' => 'https://' . $_ENV['jsdelivr_url'] . '/gh/SagerNet/sing-geosite@rule-set/geosite-cn.srs',
                 'download_detour' => 'direct',
+                'update_interval' => '1d',
+            ],
+            [
+                'tag' => 'geosite-geolocation-!cn',
+                'type' => 'remote',
+                'format' => 'binary',
+                'url' => 'https://' . $_ENV['jsdelivr_url'] . '/gh/SagerNet/sing-geosite@rule-set/geosite-geolocation-!cn.srs',
+                'download_detour' => 'direct',
+                'update_interval' => '1d',
             ],
         ],
+        'final' => 'select',
         'auto_detect_interface' => true,
+        'override_android_vpn' => true,
     ],
     'experimental' => [
         'cache_file' => [
             'enabled' => true,
             'cache_id' => '',
-        ],
-        'clash_api' => [
-            'external_controller' => '127.0.0.1:9090',
+            'path' => 'cache.db',
         ],
     ],
 ];
@@ -282,14 +353,19 @@ $_ENV['Clash_Group_Config'] = [
             'name' => '🐟 漏网之鱼',
             'type' => 'select',
             // 插入节点名称
-            'proxies' => [
-                '🔰 手动选择',
-                '♻️ 自动选择',
-                '🎯 Direct',
+            'proxies' => [               
+                '♻️ 自动选择',             
             ],
         ],
     ],
     'rules' => [
+		'DOMAIN-KEYWORD,githubusercontent,♻️ 自动选择',
+		'DOMAIN-KEYWORD,github,♻️ 自动选择',
+		'DOMAIN-KEYWORD,githubapp,♻️ 自动选择',
+		'DOMAIN-KEYWORD,githubassets,♻️ 自动选择',		
+		'DOMAIN-KEYWORD,ghcr,♻️ 自动选择',
+		'DOMAIN-SUFFIX,github.io,♻️ 自动选择',
+		'DOMAIN-SUFFIX,github.com,♻️ 自动选择',
         // 全球直连
         'DOMAIN-KEYWORD,Thunder,🎯 Direct',
         'DOMAIN-KEYWORD,XLLiveUD,🎯 Direct',
@@ -331,7 +407,7 @@ $_ENV['Clash_Group_Config'] = [
         // Microsoft
         'GEOSITE,microsoft,Ⓜ️ Microsoft',
         // Apple
-        'GEOSITE,apple,🍎 Apple',
+        'GEOIP,apple,🍎 Apple',
         // Telegram
         'GEOIP,telegram,📲 Telegram',
         'GEOSITE,telegram,📲 Telegram',
@@ -341,6 +417,7 @@ $_ENV['Clash_Group_Config'] = [
         // 国外媒体
         'GEOSITE,category-media,🌍 主流媒体',
         // 中国媒体
+		'GEOIP,category-media-cn,🇨🇳 中国媒体',
         'GEOSITE,category-media-cn,🇨🇳 中国媒体',
         // 广告拦截
         'GEOIP,ad,⛔️ 广告拦截',
@@ -751,6 +828,6 @@ $_ENV['Clash_Group_Config'] = [
         'DOMAIN-SUFFIX,xmr.cool,🛑 Block',
         'DOMAIN-SUFFIX,zymerget.win,🛑 Block',
         // 漏网之鱼
-        'MATCH,🐟 漏网之鱼',
+        'MATCH,🐟 漏网之鱼',		
     ],
 ];
