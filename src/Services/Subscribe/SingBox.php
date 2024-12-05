@@ -93,7 +93,7 @@ final class SingBox extends Base
                     $headers = $node_custom_config['header']['request']['headers'] ?? [];
                     $service_name = $node_custom_config['servicename'] ?? '';
                     $utls = $node_custom_config['utls'] ?? false;
-					$method = $node_custom_config['method'] ?? '';
+		    $method = $node_custom_config['method'] ?? '';
                     $max_early_data = $node_custom_config['max_early_data'] ?? '';
                     $early_data_header_name = $node_custom_config['early_data_header_name'] ?? '';
 					
@@ -108,7 +108,7 @@ final class SingBox extends Base
                         'tls' => [
                             'enabled' => true,
                             'server_name' => $host,
-							'insecure' => true,
+			    'insecure' => true,
                             'utls' => [
                                 'enabled' => $utls,
                                 'fingerprint' => 'chrome',
