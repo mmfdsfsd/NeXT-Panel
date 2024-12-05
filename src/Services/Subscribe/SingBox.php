@@ -92,23 +92,38 @@ final class SingBox extends Base
                     $path = $node_custom_config['header']['request']['path'][0] ?? $node_custom_config['path'] ?? '';
                     $headers = $node_custom_config['header']['request']['headers'] ?? [];
                     $service_name = $node_custom_config['servicename'] ?? '';
-
+                    $utls = $node_custom_config['utls'] ?? false;
+					$method = $node_custom_config['method'] ?? '';
+                    $max_early_data = $node_custom_config['max_early_data'] ?? '';
+                    $early_data_header_name = $node_custom_config['early_data_header_name'] ?? '';
+					
                     $node = [
                         'type' => 'vmess',
                         'tag' => $node_raw->name,
                         'server' => $node_raw->server,
                         'server_port' => (int) $v2_port,
                         'uuid' => $user->uuid,
-                        'security' => 'auto',
+                        'security' => 'auto',						
                         'alter_id' => 0,
                         'tls' => [
+                            'enabled' => true,
                             'server_name' => $host,
+							'insecure' => true,
+                            'utls' => [
+                                'enabled' => $utls,
+                                'fingerprint' => 'chrome',
+                            ],
                         ],
+                        'packet_encoding' => 'xudp',
+                        'global_padding' => true,
+                        'authenticated_length' => true,
                         'transport' => [
                             'type' => $transport,
                             'path' => $path,
                             'headers' => $headers,
                             'service_name' => $service_name,
+                            'max_early_data' => (int) $max_early_data,
+                            'early_data_header_name' => $early_data_header_name,
                         ],
                     ];
 
@@ -160,6 +175,7 @@ final class SingBox extends Base
 
             $nodes[] = $node;
             $singbox_config['outbounds'][0]['outbounds'][] = $node_raw->name;
+            $singbox_config['outbounds'][1]['outbounds'][] = $node_raw->name;
         }
 
         $singbox_config['outbounds'] = array_merge($singbox_config['outbounds'], $nodes);
