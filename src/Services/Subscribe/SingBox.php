@@ -92,8 +92,9 @@ final class SingBox extends Base
                     $path = $node_custom_config['header']['request']['path'][0] ?? $node_custom_config['path'] ?? '';
                     $headers = $node_custom_config['header']['request']['headers'] ?? [];
                     $service_name = $node_custom_config['servicename'] ?? '';
+					$tls = $node_custom_config['tls'] ?? false;
                     $utls = $node_custom_config['utls'] ?? false;
-		    $method = $node_custom_config['method'] ?? '';
+					$method = $node_custom_config['method'] ?? '';
                     $max_early_data = $node_custom_config['max_early_data'] ?? '';
                     $early_data_header_name = $node_custom_config['early_data_header_name'] ?? '';
 					
@@ -106,9 +107,9 @@ final class SingBox extends Base
                         'security' => 'auto',						
                         'alter_id' => 0,
                         'tls' => [
-                            'enabled' => true,
+                            'enabled' => (bool)$tls,
                             'server_name' => $host,
-			    'insecure' => true,
+							'insecure' => true,
                             'utls' => [
                                 'enabled' => $utls,
                                 'fingerprint' => 'chrome',
@@ -120,6 +121,7 @@ final class SingBox extends Base
                         'transport' => [
                             'type' => $transport,
                             'path' => $path,
+							'method' => $method,
                             'headers' => $headers,
                             'service_name' => $service_name,
                             'max_early_data' => (int) $max_early_data,
