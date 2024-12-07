@@ -121,7 +121,7 @@ final class SingBox extends Base
                         'transport' => [
                             'type' => $transport,
                             'path' => $path,
-							'method' => $method,
+			    'method' => $method,
                             'headers' => $headers,
                             'service_name' => $service_name,
                             'max_early_data' => (int) $max_early_data,
