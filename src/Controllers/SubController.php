@@ -91,6 +91,9 @@ final class SubController extends BaseController
 
         return $response->withHeader('Subscription-Userinfo', $sub_details)
             ->withHeader('Content-Type', $content_type)
+            //for happ
+			->withHeader('support-url', $_ENV['baseUrl'])
+			->withHeader('announce', '温馨提示：无法使用时请更新订阅！')
             ->write($sub_info);
     }
 }
