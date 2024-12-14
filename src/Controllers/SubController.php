@@ -86,6 +86,10 @@ final class SubController extends BaseController
                 ->withHeader('Profile-Update-Interval', $sub_profile_update_interval)
                 ->withHeader('Profile-Web-Page-Url', $sub_profile_web_page_url)
                 ->withHeader('Content-Type', $content_type)
+		// for karing
+		->withHeader('isp-name', urlencode($_ENV['appName']))
+		->withHeader('isp-url', $_ENV['baseUrl'] . '/user/product')
+		->withHeader('isp-faq', $_ENV['baseUrl'] . '/user/user')
                 ->write($sub_info);
         }
 
