@@ -137,7 +137,7 @@ $_ENV['SingBox_Config'] = [
             'interrupt_exist_connections' => true,
         ],
         [
-			'tag' => 'auto',
+	    'tag' => 'auto',
             'type' => 'urltest',           
             'outbounds' => [],
             'url' => 'https://cp.cloudflare.com/generate_204',
