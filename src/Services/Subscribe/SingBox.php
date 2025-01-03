@@ -89,6 +89,7 @@ final class SingBox extends Base
                     $transport = ($node_custom_config['network'] ?? '') === 'tcp' ? '' : $node_custom_config['network'];
                     $host = $node_custom_config['header']['request']['headers']['Host'][0] ??
                         $node_custom_config['host'] ?? '';
+		    $allow_insecure = $node_custom_config['allow_insecure'] ?? '0';
                     $path = $node_custom_config['header']['request']['path'][0] ?? $node_custom_config['path'] ?? '';
                     $headers = $node_custom_config['header']['request']['headers'] ?? [];
                     $service_name = $node_custom_config['servicename'] ?? '';
@@ -109,7 +110,7 @@ final class SingBox extends Base
                         'tls' => [
                             'enabled' => (bool)$tls,
                             'server_name' => $host,
-			    'insecure' => true,
+			    'insecure' => (bool) $allow_insecure,
                             'utls' => [
                                 'enabled' => $utls,
                                 'fingerprint' => 'chrome',
