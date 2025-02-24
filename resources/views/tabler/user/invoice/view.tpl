@@ -115,6 +115,7 @@
                         </ul>
                         <div class="card-body">
                             <div class="tab-content">
+                                {if {$invoice_content_detail->price} <= {$user->money}}
                                 {if $invoice->type !== 'topup'}
                                 <div class="tab-pane active show" id="balance">
                                     <div class="mb-3">
@@ -126,10 +127,11 @@
                                                 hx-vals='js:{
                                                     invoice_id: {$invoice->id},
                                                 }'>
-                                            支付
+                                            余额支付
                                         </button>
                                     </div>
                                 </div>
+                                {/if}
                                 {/if}
                                 {if count($payments) > 0}
                                 <div class="tab-pane show" id="gateway">
