@@ -121,17 +121,17 @@ final class Stripe extends Base
                         'quantity' => 1,
                     ],
                 ],
-                'mode' => 'payment',
-                 'payment_method_types' => [
-		     "wechat_pay",
-		     "alipay",
-		     "card",	
-		],
-		'payment_method_options'=> [
-		    'wechat_pay' => [
-		        'client' => 'web',
-		    ],
-		],                                          
+		'payment_method_types' => [
+			'card',
+			'alipay',	
+			'wechat_pay',					
+			],
+		'payment_method_options' => [
+			'wechat_pay' => [
+			'client' => "web",
+			],
+		],          
+                'mode' => 'payment',                             
                 'payment_intent_data' => [
                     'metadata' => [
                         'trade_no' => $pl->tradeno,
