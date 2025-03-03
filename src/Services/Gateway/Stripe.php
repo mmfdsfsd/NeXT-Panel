@@ -130,13 +130,13 @@ final class Stripe extends Base
 			'wechat_pay' => [
 			'client' => "web",
 			],
-		],          
-                'mode' => 'payment',                             
+		],                                    
                 'payment_intent_data' => [
                     'metadata' => [
                         'trade_no' => $pl->tradeno,
                     ],
                 ],
+		'mode' => 'payment',   					   
                 'success_url' => $_ENV['baseUrl'] . '/user/invoice/' . $invoice_id . '/view',
                 'cancel_url' => $_ENV['baseUrl'] . '/user/invoice/' . $invoice_id . '/view',
             ]);
