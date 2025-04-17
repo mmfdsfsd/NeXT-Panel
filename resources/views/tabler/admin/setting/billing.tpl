@@ -45,6 +45,9 @@
                                 <li class="nav-item">
                                     <a href="#paypal" class="nav-link" data-bs-toggle="tab">PayPal</a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="#cryptomus" class="nav-link" data-bs-toggle="tab">Cryptomus</a>
+                                </li>
                             </ul>
                         </div>
                         <div class="card-body">
