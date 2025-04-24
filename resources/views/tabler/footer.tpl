@@ -49,12 +49,25 @@
 <script src="//{$config['jsdelivr_url']}/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
 
 <script>
-    let successDialog = new bootstrap.Modal(document.getElementById('success-dialog'));
-    let failDialog = new bootstrap.Modal(document.getElementById('fail-dialog'));
+    function showDialog(dialogId, message) {
+        const dialog = document.getElementById(dialogId);
+        const messageElement = dialog.querySelector('p');
+        messageElement.textContent = message;
+
+        dialog.classList.add('show');
+        dialog.style.display = 'block';
+        dialog.removeAttribute('aria-hidden');
+        dialog.querySelectorAll('[data-bs-dismiss]').forEach(btn => {
+            btn.onclick = () => {
+                dialog.classList.remove('show');
+                dialog.style.display = 'none';
+                dialog.setAttribute('aria-hidden', 'true');
+            };
+        });
+    }
 
     htmx.on("htmx:afterRequest", function(evt) {
-        if (evt.detail.xhr.getResponseHeader('HX-Redirect'))
-        {
+        if (evt.detail.xhr.getResponseHeader('HX-Redirect')) {
             return;
         }
 
@@ -65,11 +78,9 @@
         }
 
         if (res.ret === 1) {
-            document.getElementById("success-message").innerHTML = res.msg;
-            successDialog.show();
+            showDialog('success-dialog', res.msg);
         } else {
-            document.getElementById("fail-message").innerHTML = res.msg;
-            failDialog.show();
+            showDialog('fail-dialog', res.msg);
         }
     });
 </script>
