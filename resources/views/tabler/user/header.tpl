@@ -26,7 +26,7 @@
         })()
     </script>
     <!-- 弹窗在中间提示 -->
-	<style>
+    <style>
 	.toast-message {
 	  position: fixed;
 	  top: 50%;
