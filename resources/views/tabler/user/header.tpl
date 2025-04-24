@@ -25,6 +25,38 @@
             }
         })()
     </script>
+    <!-- 弹窗在中间提示 -->
+	<style>
+		.toast-message {
+		  position: fixed;
+		  top: 50%;
+		  left: 50%;
+		  transform: translate(-50%, -50%);
+		  background-color: #28a745;
+		  color: white;
+		  padding: 16px 28px;
+		  border-radius: 8px;
+		  font-size: 16px;
+		  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+		  z-index: 9999;
+		  opacity: 0;
+		  pointer-events: none;
+		  transition: opacity 0.3s ease;
+		}
+		.toast-message.show {
+		  opacity: 1;
+		  pointer-events: auto;
+		}
+		.btn {
+		  display: inline-block;
+		  background-color: #007bff;
+		  color: white;
+		  padding: 8px 16px;
+		  text-decoration: none;
+		  border-radius: 5px;
+		  cursor: pointer;
+		}
+    </style>
     <!-- CSS files -->
     <link href="//{$config['jsdelivr_url']}/npm/@tabler/core@latest/dist/css/tabler.min.css" rel="stylesheet"/>
     <link href="//{$config['jsdelivr_url']}/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet"/>
