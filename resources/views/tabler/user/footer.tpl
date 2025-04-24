@@ -62,17 +62,26 @@
 </footer>
 </div>
 </div>
+<div id="toast" class="toast-message">已复制到剪贴板</div>
 <!-- js -->
 <script src="//{$config['jsdelivr_url']}/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
 <script>
-    let successDialog = new bootstrap.Modal(document.getElementById('success-dialog'));
-    let failDialog = new bootstrap.Modal(document.getElementById('fail-dialog'));
-
-    let clipboard = new ClipboardJS('.copy');
-    clipboard.on('success', function () {
-        document.getElementById("success-message").innerHTML = '已复制到剪切板';
-        successDialog.show();
+    const toast = document.getElementById("toast");
+    const clipboard = new ClipboardJS('.copy');
+    clipboard.on('success', function(e) {
+      showToast("✅ 已复制：" + e.text);
     });
+    clipboard.on('error', function() {
+      showToast("❌ 复制失败，请手动复制");
+    });
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
 
     htmx.on("htmx:afterRequest", function(evt) {
         if (evt.detail.xhr.getResponseHeader('HX-Refresh') === 'true' ||
