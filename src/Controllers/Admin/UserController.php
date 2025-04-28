@@ -29,12 +29,12 @@ final class UserController extends BaseController
             'transfer_enable' => '流量限制',
             'transfer_used' => '当期用量',
             'class' => '等级',			
-			'class_expire' => '等级过期',
-			'last_use_time' => '最后使用',
-			'last_login_time' => '最后登录',
-			'reg_date' => '注册时间',
-			'ref_by' => '邀请人ID',
-			'is_inactive' => '是否闲置',
+	    'class_expire' => '等级过期',
+	    'last_use_time' => '最后使用',
+	    'last_login_time' => '最后登录',
+	    'reg_date' => '注册时间',
+	    'ref_by' => '邀请人ID',
+	    'is_inactive' => '是否闲置',
             'is_admin' => '是否管理员',
             'is_banned' => '是否封禁',      
         ],
@@ -250,14 +250,14 @@ final class UserController extends BaseController
     }
 
     private function convertTimestampToBJTime($timestamp): string
-	{
-		if (!$timestamp || (int)$timestamp === 0) {
-			return '';
-		}
-		$dt = new \DateTime("@$timestamp"); // 创建 UTC 时间
-		$dt->setTimezone(new \DateTimeZone('Asia/Shanghai')); // 转换到北京时间
-		return $dt->format('Y-m-d H:i:s'); // 格式化输出
+    {
+	if (!$timestamp || (int)$timestamp === 0) {
+		return '';
 	}
+	$dt = new \DateTime("@$timestamp"); // 创建 UTC 时间
+	$dt->setTimezone(new \DateTimeZone('Asia/Shanghai')); // 转换到北京时间
+	return $dt->format('Y-m-d H:i:s'); // 格式化输出
+    }
     
     public function ajax(ServerRequest $request, Response $response, array $args): ResponseInterface
     {
@@ -274,8 +274,8 @@ final class UserController extends BaseController
             $user->is_inactive = $user->is_inactive === 1 ? '是' : '否';
 
              // ⭐ 新加的，把时间戳字段转成北京时间字符串						
-			$user->last_use_time = $this->convertTimestampToBJTime($user->last_use_time);
-			$user->last_login_time = $this->convertTimestampToBJTime($user->last_login_time);
+	    $user->last_use_time = $this->convertTimestampToBJTime($user->last_use_time);
+	    $user->last_login_time = $this->convertTimestampToBJTime($user->last_login_time);
         }
 
         return $response->withJson([
