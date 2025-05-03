@@ -62,6 +62,10 @@
 </footer>
 </div>
 </div>
+<!-- 模态框触发器（隐藏按钮） -->
+<button id="trigger-success-dialog" type="button" class="d-none" data-bs-toggle="modal" data-bs-target="#success-dialog"></button>
+<button id="trigger-fail-dialog" type="button" class="d-none" data-bs-toggle="modal" data-bs-target="#fail-dialog"></button>
+
 <div id="toast" class="toast-message">已复制到剪贴板</div>
 <!-- js -->
 <script src="//{$config['jsdelivr_url']}/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
@@ -84,48 +88,57 @@
     }
 
     htmx.on("htmx:afterRequest", function(evt) {
-        if (evt.detail.xhr.getResponseHeader('HX-Refresh') === 'true' ||
-            evt.detail.xhr.getResponseHeader('HX-Redirect') ||
-            evt.detail.xhr.getResponseHeader('HX-Trigger'))
-        {
-            return;
-        }
+    if (evt.detail.xhr.getResponseHeader('HX-Refresh') === 'true' ||
+        evt.detail.xhr.getResponseHeader('HX-Redirect') ||
+        evt.detail.xhr.getResponseHeader('HX-Trigger')) {
+        return;
+    }
 
-        let res = JSON.parse(evt.detail.xhr.response);
+    let res;
+    try {
+        res = JSON.parse(evt.detail.xhr.response);
+    } catch (e) {
+        console.error("响应解析失败:", e);
+        return;
+    }
 
-        if (typeof res.data !== 'undefined') {
-            for (let key in res.data) {
-                if (res.data.hasOwnProperty(key)) {
-                    if (key === "ga-url") {
-                        qrcode.clear();
-                        qrcode.makeCode(res.data[key]);
+    // 动态填充字段内容
+    if (typeof res.data !== 'undefined') {
+        for (let key in res.data) {
+            if (res.data.hasOwnProperty(key)) {
+                if (key === "ga-url" && typeof qrcode !== 'undefined') {
+                    qrcode.clear();
+                    qrcode.makeCode(res.data[key]);
+                }
+
+                if (key === "last-checkin-time") {
+                    const checkInBtn = document.getElementById("check-in");
+                    if (checkInBtn) {
+                        checkInBtn.innerHTML = "已签到";
+                        checkInBtn.disabled = true;
                     }
+                }
 
-                    if (key === "last-checkin-time") {
-                        document.getElementById("check-in").innerHTML = "已签到"
-                        document.getElementById("check-in").disabled = true;
-                    }
-
-                    let element = document.getElementById(key);
-
-                    if (element) {
-                        if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
-                            element.value = res.data[key];
-                        } else {
-                            element.innerHTML = res.data[key];
-                        }
+                const element = document.getElementById(key);
+                if (element) {
+                    if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
+                        element.value = res.data[key];
+                    } else {
+                        element.innerHTML = res.data[key];
                     }
                 }
             }
         }
+    }
 
-        if (res.ret === 1) {
-            document.getElementById("success-message").innerHTML = res.msg;
-            successDialog.show();
-        } else {
-            document.getElementById("fail-message").innerHTML = res.msg;
-            failDialog.show();
-        }
+    // 显示模态框：成功或失败
+    if (res.ret === 1) {
+        document.getElementById("success-message").textContent = res.msg || "操作成功";
+        document.getElementById("trigger-success-dialog").click();
+    } else {
+        document.getElementById("fail-message").textContent = res.msg || "操作失败";
+        document.getElementById("trigger-fail-dialog").click();
+    }
     });
 </script>
 <script>console.table([['数据库查询', '执行时间'], ['{count($queryLog)} 次', '{$optTime} ms']])</script>
