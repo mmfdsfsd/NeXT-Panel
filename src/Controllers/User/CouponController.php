@@ -22,7 +22,7 @@ final class CouponController extends BaseController
     {
         $coupon_raw = $this->antiXss->xss_clean($request->getParam('coupon'));
         $product_id = $this->antiXss->xss_clean($request->getParam('product_id'));
-        $invalid_coupon_msg = '优惠码无效';
+        $invalid_coupon_msg = '优惠码无效，请移除优惠码';
 
         if ($coupon_raw === '') {
             return $response->withJson([
