@@ -156,7 +156,7 @@ final class OrderController extends BaseController
             if ($coupon === null || ($coupon->expire_time !== 0 && $coupon->expire_time < time())) {
                 return $response->withJson([
                     'ret' => 0,
-                    'msg' => '优惠码不存在或已过期',
+                    'msg' => '优惠码不存在或已过期，请移除优惠码',
                 ]);
             }
 
@@ -165,14 +165,14 @@ final class OrderController extends BaseController
             if ($coupon_limit->disabled) {
                 return $response->withJson([
                     'ret' => 0,
-                    'msg' => '优惠码已被禁用',
+                    'msg' => '优惠码已被禁用，请移除优惠码',
                 ]);
             }
 
             if ($coupon_limit->product_id !== '' && ! in_array($product_id, explode(',', $coupon_limit->product_id))) {
                 return $response->withJson([
                     'ret' => 0,
-                    'msg' => '优惠码不适用于此商品',
+                    'msg' => '优惠码不适用于此商品，请移除优惠码',
                 ]);
             }
 
@@ -183,7 +183,7 @@ final class OrderController extends BaseController
                 if ($user_use_count >= $coupon_use_limit) {
                     return $response->withJson([
                         'ret' => 0,
-                        'msg' => '优惠码使用次数已达上限',
+                        'msg' => '优惠码使用次数已达上限，请移除优惠码',
                     ]);
                 }
             }
@@ -197,7 +197,7 @@ final class OrderController extends BaseController
             if ($coupon_total_use_limit > 0 && $coupon->use_count >= $coupon_total_use_limit) {
                 return $response->withJson([
                     'ret' => 0,
-                    'msg' => '优惠码使用次数已达上限',
+                    'msg' => '优惠码使用次数已达上限，请移除优惠码',
                 ]);
             }
 
