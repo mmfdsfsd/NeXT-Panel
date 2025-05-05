@@ -67,7 +67,8 @@
             $('#notice-confirm').off('click').on('click', function () {
                 $.ajax({
                     url: "/admin/ticket/" + ticket_id + '/close',
-                    type: 'PUT',
+                    type: "POST",
+                    data: { _method: "PUT" },
                     dataType: "json",
                     success: function (data) {
                         if (data.ret === 1) {
