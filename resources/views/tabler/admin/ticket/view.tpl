@@ -124,8 +124,8 @@
                 <div class="modal-footer">
                     <button type="button" class="btn me-auto" data-bs-dismiss="modal">取消</button>
                      <button id="confirm_close" type="button" class="btn btn-primary" data-bs-dismiss="modal"
-		      hx-post="/admin/ticket/{$ticket->id}/close" 
-                      hx-swap="none">
+			      hx-post="/admin/ticket/{$ticket->id}/close" 
+	                      hx-swap="none">
 			确认
                     </button>
                 </div>
