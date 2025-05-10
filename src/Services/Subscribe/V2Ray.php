@@ -22,7 +22,10 @@ final class V2Ray extends Base
         }
 
         $nodes_raw = Subscribe::getUserNodes($user);
-
+        
+        // 在 VMess 链接输出之前，添加 SOCKS5 Base64 编码链接 username:passwd@IP:port#name
+		$links .= 'socks://bW10aS5vbmU6bW10aS5vbmU=@guanwang.awsno.com:1080#打不开官网时请选我👈'. PHP_EOL;
+        
         foreach ($nodes_raw as $node_raw) {
             $node_custom_config = json_decode($node_raw->custom_config, true);
 
