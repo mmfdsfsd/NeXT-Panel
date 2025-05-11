@@ -21,24 +21,41 @@ final class Clash extends Base
         $clash_group_config = $_ENV['Clash_Group_Config'];
         $nodes_raw = Subscribe::getUserNodes($user);
 
-        // 添加一个 SOCKS5 代理配置,检查 SOCKS5 名称是否已经存在，避免重复添加
-	$socks5_node_name = '打不开官网时请选我👈';
-	$existing_names = array_column($nodes, 'name');
-	if (!in_array($socks5_node_name, $existing_names)) {
-		$socks5_node = [
-			'name' => '打不开官网时请选我👈',  // 代理名称
-			'type' => 'socks5',         // 代理类型
-			'server' => 'guanwang.awsno.com',   // SOCKS5 服务器地址
-			'port' => 1080,             // SOCKS5 服务器端口
-			'username' => 'mmti.one', // SOCKS5 用户名（如果需要）
-			'password' => 'mmti.one', // SOCKS5 密码（如果需要）
-			
-		];
-		$nodes[] = $socks5_node;
-		foreach ($clash_group_indexes as $index) {
-			$clash_group_config['proxy-groups'][$index]['proxies'][] = $socks5_node_name;
+        		// 添加一个 SOCKS5 代理配置,检查 SOCKS5 名称是否已经存在，避免重复添加
+//		$socks5_node_name = '👉官网续费专用线路👈';
+//		$existing_names = array_column($nodes, 'name');
+//		if (!in_array($socks5_node_name, $existing_names)) {
+//			$socks5_node = [
+//				'name' => '👉官网续费专用线路👈',  // 代理名称
+//				'type' => 'socks5',         // 代理类型
+//				'server' => 'guanwang.awsno.com',   // SOCKS5 服务器地址
+//				'port' => 1234,             // SOCKS5 服务器端口							
+//			];
+//			$nodes[] = $socks5_node;
+//			foreach ($clash_group_indexes as $index) {
+//				$clash_group_config['proxy-groups'][$index]['proxies'][] = $socks5_node_name;
+//			}
+//		}
+		
+		// 添加一个 Vmess 代理配置,检查 Vmess 名称是否已经存在，避免重复添加
+		$vmess_node_name = '👉官网续费专用线路👈';
+		$existing_names = array_column($nodes, 'name');
+		if (!in_array($vmess_node_name, $existing_names)) {
+			$vmess_node = [
+				'name' => '👉官网续费专用线路👈',  
+				'type' => 'vmess',         
+				'server' => 'guanwang.awsno.com',   
+				'port' => 1080, 
+				'uuid' => '6a89a215-22bf-4bd7-9642-b95b6589583a',
+				'alterId' => 0,
+				'cipher' => 'auto',								
+				'network' => 'tcp',				
+			];
+			$nodes[] = $vmess_node;
+			foreach ($clash_group_indexes as $index) {
+				$clash_group_config['proxy-groups'][$index]['proxies'][] = $vmess_node_name;
+			}
 		}
-	}
         
         foreach ($nodes_raw as $node_raw) {
             $node_custom_config = json_decode($node_raw->custom_config, true);
