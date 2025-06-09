@@ -253,7 +253,7 @@ final class User extends Model
         (new Link())->where('userid', $uid)->delete();
         (new LoginIp())->where('userid', $uid)->delete();
         (new SubscribeLog())->where('user_id', $uid)->delete();
-
+        (new Ticket())->where('userid', $uid)->delete(); // ✅ 新增：删除用户的工单
         return $this->delete();
     }
 
