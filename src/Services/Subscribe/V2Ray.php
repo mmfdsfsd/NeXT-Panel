@@ -50,7 +50,7 @@ final class V2Ray extends Base
                     'host' => $host,
                     'path' => $path,
                     'tls' => $security,
-					'allowInsecure' => '1',
+					'allowInsecure' => '1',  //新增
                 ];
 
                 $links .= 'vmess://' . base64_encode(json_encode($v2rayn_array)) . PHP_EOL;
