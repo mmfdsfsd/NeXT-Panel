@@ -525,42 +525,53 @@
                         <div class="card">
                             <div class="card-body">
                                 <h3 class="card-title">流量用量</h3>
-                                <div class="progress progress-separated mb-3">
-                                    {if $user->LastusedTrafficPercent() < '1'}
-                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 1%"></div>
-                                    {else}
-                                    <div class="progress-bar bg-primary" role="progressbar"
-                                         style="width: {$user->LastusedTrafficPercent()}%">
-                                    </div>
-                                    {/if}
-                                    {if $user->TodayusedTrafficPercent() < '1'}
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: 1%"></div>
-                                    {else}
-                                    <div class="progress-bar bg-success" role="progressbar"
-                                         style="width: {$user->TodayusedTrafficPercent()}%"></div>
-                                    {/if}
-                                </div>
-                                <div class="row">
-                                    <div class="col-auto d-flex align-items-center pe-2">
-                                        <span class="legend me-2 bg-primary"></span>
-                                        <span>过去用量 {$user->LastusedTraffic()}</span>
-                                    </div>
-                                    <div class="col-auto d-flex align-items-center px-2">
-                                        <span class="legend me-2 bg-success"></span>
-                                        <span>今日用量 {$user->TodayusedTraffic()}</span>
-                                    </div>
-                                    <div class="col-auto d-flex align-items-center ps-2">
-                                        <span class="legend me-2"></span>
-                                        <span>剩余流量 {$user->unusedTraffic()}</span>
-                                    </div>
-                                </div>
+
+                                {assign var="usedPercent" value=$user->LastusedTrafficPercent()+$user->TodayusedTrafficPercent()}
+								{assign var="unusedPercent" value=$user->unusedTrafficPercent()}
+
+								{if $unusedPercent < 10}
+									{assign var="barColor" value="bg-danger"}
+								{elseif $unusedPercent < 30}
+									{assign var="barColor" value="bg-warning"}
+								{else}
+									{assign var="barColor" value="bg-primary"}
+								{/if}
+
+								<!-- 进度条 -->
+								<div class="progress progress-striped progress-separated mb-3" style="height: 18px;">
+									<!-- 已用+今日流量 -->
+									<div class="progress-bar {$barColor}" role="progressbar" 
+										 style="width: {$usedPercent}%">
+										{if $usedPercent > 5}{$usedPercent}%{/if}
+									</div>
+
+									<!-- 剩余流量 -->
+									<div class="progress-bar bg-success" role="progressbar" 
+										 style="width: {$unusedPercent}%">
+										
+									</div>
+								</div>
+
+								<!-- 说明文字 -->
+								<div class="row">
+									<div class="col-auto d-flex align-items-center pe-2">
+										<span class="legend me-2 {$barColor}"></span>
+										<span>已用流量: {$user->LastusedTraffic()} + 今日: {$user->TodayusedTraffic()}</span>
+									</div>
+									<div class="col-auto d-flex align-items-center ps-2">
+										<span class="legend me-2 bg-success"></span>
+										<span>剩余流量: {$user->unusedTraffic()}</span>
+									</div>
+									<div class="col-auto d-flex align-items-center ps-2">
+										<span class="legend me-2 bg-secondary"></span>
+										<span>套餐总量: {$user->enableTraffic()}</span>
+									</div>
+								</div>
                                 <p class="my-3">
                                     {if $user->class === 0}
-                                    前往
-                                    <a href="/user/product">商店</a>
-                                    购买套餐
+                                    请联系您的代理商购买会员权益！
                                     {else}
-                                    你的 LV. {$user->class} 账户会在 {$class_expire_days} 天后到期（{$user->class_expire}）
+                                   您的会员权益将在 {$class_expire_days} 天后（{$user->class_expire}）或剩余流量用光时失效！
                                     {/if}
                                 </p>
                             </div>
