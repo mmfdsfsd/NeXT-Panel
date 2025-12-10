@@ -54,6 +54,7 @@ final class CronController extends BaseController
                 'msg' => '每日任务执行时间的分钟数必须在 0-59 之间',
             ]);
         }
+		
         $ignore_keys = ['last_daily_job_time'];
         foreach ($this->update_field as $item) {
 
