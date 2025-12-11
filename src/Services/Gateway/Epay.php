@@ -83,20 +83,17 @@ final class Epay extends Base
         }
 
         $user = Auth::getUser();
-        $pl = (new Paylist())->where('invoice_id', $invoice_id)->first();
+        $pl = new Paylist();
+        $pl->userid = $user->id;
+        $pl->total = $price;
+        $pl->invoice_id = $invoice_id;
+        $pl->tradeno = self::generateGuid();
 
-        if ($pl === null) {
-            $pl = new Paylist();
-            $pl->userid = $user->id;
-            $pl->total = $price;
-            $pl->invoice_id = $invoice_id;
-            $pl->tradeno = self::generateGuid();
-        }
 
         $type_text = match ($type) {
             'qqpay' => 'QQ',
             'wxpay' => 'WeChat',
-            'epusdt' => 'USDT',
+            'usdt' => 'USDT',
             default => 'Alipay',
         };
 
@@ -121,29 +118,38 @@ final class Epay extends Base
         $data['sign_type'] = $this->epay['sign_type'];
         $client = new Client();
 
-        try {
+        try {			
             $res = json_decode(
                 $client->request(
                     'POST',
-                    $this->epay['apiurl'] . 'mapi.php',
+					// 使用 rtrim 确保去掉末尾可能存在的斜杠，然后手动补上一个斜杠
+					rtrim($this->epay['apiurl'], '/') . '/mapi.php',
+//                  $this->epay['apiurl'] . 'mapi.php',
                     ['form_params' => $data]
                 )->getBody()->__toString(),
                 true
             );
 
             if ($res['code'] !== 1 || ! isset($res['payurl'])) {
+                // --- 修改开始：获取上游真实的错误信息 ---
+                $upstreamMsg = $res['msg'] ?? '未返回错误信息';
+                $debugData = json_encode($res, JSON_UNESCAPED_UNICODE);
+                
                 return $response->withJson([
                     'ret' => 0,
-                    'msg' => '请求支付失败，网关错误',
-                    //TODO: use syslog to log this error
+                    // 将上游的错误直接显示出来，方便调试
+                    'msg' => "支付方拒绝: {$upstreamMsg} (调试数据: {$debugData})",
                 ]);
+                // --- 修改结束 ---
             }
-
             return $response->withHeader('HX-Redirect', $res['payurl']);
-        } catch (GuzzleException) {
+		//	return $response->withRedirect($res['payurl']);
+
+        } catch (GuzzleException $e) {
+			
             return $response->withJson([
                 'ret' => 0,
-                'msg' => '请求支付失败，网关错误',
+                'msg'  => '请求支付失败2，网关错误：' . $e->getMessage(),				
             ]);
         }
     }
