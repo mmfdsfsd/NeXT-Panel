@@ -59,7 +59,8 @@ final class Epay extends Base
     }
 
     public function purchase(ServerRequest $request, Response $response, array $args): ResponseInterface
-    {
+    {   
+		$price = $this->antiXss->xss_clean($request->getParam('price'));
         $invoice_id = $this->antiXss->xss_clean($request->getParam('invoice_id'));
         // EPay 特定参数
         $type = $this->antiXss->xss_clean($request->getParam('type'));
