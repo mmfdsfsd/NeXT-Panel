@@ -143,8 +143,12 @@ final class Epay extends Base
                 ]);
                 // --- 修改结束 ---
             }
-            return $response->withHeader('HX-Redirect', $res['payurl']);
-		//	return $response->withRedirect($res['payurl']);
+   //         return $response->withHeader('HX-Redirect', $res['payurl']);
+			return $response->withJson([
+				'ret' => 1,
+				'msg' => '请在打开的在线收银台付款！付款成功后，请刷新本页面查看订单支付结果',
+				'payurl' => $res['payurl'], // 将支付URL放在 JSON 体中
+			]);
 
         } catch (GuzzleException $e) {
 			
