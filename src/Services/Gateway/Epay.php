@@ -59,7 +59,7 @@ final class Epay extends Base
     }
 
     public function purchase(ServerRequest $request, Response $response, array $args): ResponseInterface
-    {   
+    {	
 		$price = $this->antiXss->xss_clean($request->getParam('price'));
         $invoice_id = $this->antiXss->xss_clean($request->getParam('invoice_id'));
         // EPay 特定参数
@@ -74,7 +74,7 @@ final class Epay extends Base
             ]);
         }
 
-        $price = $invoice->price;
+       $price = $invoice->price;
 
         if ($price <= 0) {
             return $response->withJson([
@@ -131,25 +131,34 @@ final class Epay extends Base
                 true
             );
 
-            if ($res['code'] !== 1 || ! isset($res['payurl'])) {
-                // --- 修改开始：获取上游真实的错误信息 ---
-                $upstreamMsg = $res['msg'] ?? '未返回错误信息';
-                $debugData = json_encode($res, JSON_UNESCAPED_UNICODE);
-                
-                return $response->withJson([
-                    'ret' => 0,
-                    // 将上游的错误直接显示出来，方便调试
-                    'msg' => "支付方拒绝: {$upstreamMsg} (调试数据: {$debugData})",
-                ]);
-                // --- 修改结束 ---
-            }
-   //         return $response->withHeader('HX-Redirect', $res['payurl']);
+           if (!isset($res['code']) || $res['code'] != 1) {
+			   $upstreamMsg = $res['msg'] ?? '未返回错误信息';
+			   $debugData = json_encode($res, JSON_UNESCAPED_UNICODE);
+				return $response->withJson([
+					'ret' => 0,
+//					'msg' => '支付失败：' . ($res['msg'] ?? '未知错误'),
+					'msg' => "支付失败: {$upstreamMsg} (调试数据: {$debugData})",
+				]);
+			}
+
+			// 兼容不同易支付返回字段
+			$payUrl = $res['payurl'] ?? $res['qrcode'] ?? null;
+
+			if ($payUrl === null) {
+				return $response->withJson([
+					'ret' => 0,
+					'msg' => '支付失败：未返回支付地址',
+				]);
+			}
+
 			return $response->withJson([
 				'ret' => 1,
-				'msg' => '请在打开的在线收银台付款！付款成功后，请刷新本页面查看订单支付结果',
-				'payurl' => $res['payurl'], // 将支付URL放在 JSON 体中
+				'msg' => '请在打开的收银台完成付款',
+				'payurl' => $payUrl,
 			]);
 
+
+		
         } catch (GuzzleException $e) {
 			
             return $response->withJson([
