@@ -118,11 +118,18 @@ function showWxPayQr(url) {
 
 <script>
 let payCheckTimer = null;
-let hasCheckedOnce = false; // 关键：防止首次加载误判
+let payTimeoutTimer = null;
+let hasCheckedOnce = false;
+
+const PAY_CHECK_INTERVAL = 5000;       // 5 秒检测一次
+const PAY_MAX_DURATION  = 10 * 60 * 1000; // 10 分钟超时
 
 function startPayStatusCheck() {
     if (payCheckTimer) return;
 
+    hasCheckedOnce = false;
+
+    // ① 启动轮询
     payCheckTimer = setInterval(() => {
         fetch(window.location.href, {
             cache: 'no-store',
@@ -131,7 +138,7 @@ function startPayStatusCheck() {
         .then(res => res.text())
         .then(html => {
 
-            // 1️⃣ 精准匹配“账单状态”这一栏
+            // 精准匹配“账单状态”
             const match = html.match(
                 /账单状态<\/div>\s*<div class="datagrid-content">([^<]+)<\/div>/
             );
@@ -140,17 +147,15 @@ function startPayStatusCheck() {
 
             const statusText = match[1].trim();
 
-            // 2️⃣ 第一次只记录状态，不做任何动作
+            // 第一次仅记录，防止误判
             if (!hasCheckedOnce) {
                 hasCheckedOnce = true;
                 return;
             }
 
-            // 3️⃣ 后续轮询才允许触发
+            // 已支付
             if (statusText.includes('已支付')) {
-                clearInterval(payCheckTimer);
-                payCheckTimer = null;
-
+                stopPayStatusCheck();
                 alert('支付成功，页面即将刷新');
                 location.reload();
             }
@@ -158,12 +163,26 @@ function startPayStatusCheck() {
         .catch(err => {
             console.warn('支付状态检测失败', err);
         });
-    }, 5000); // 5 秒一次，稳定不炸
+    }, PAY_CHECK_INTERVAL);
+
+    // ② 启动超时兜底
+    payTimeoutTimer = setTimeout(() => {
+        stopPayStatusCheck();
+        alert('支付超时，如已完成支付请手动刷新页面');
+    }, PAY_MAX_DURATION);
 }
 
-window.addEventListener('beforeunload', () => {
+function stopPayStatusCheck() {
     if (payCheckTimer) {
         clearInterval(payCheckTimer);
+        payCheckTimer = null;
     }
-});
+    if (payTimeoutTimer) {
+        clearTimeout(payTimeoutTimer);
+        payTimeoutTimer = null;
+    }
+}
+
+// 页面关闭时清理
+window.addEventListener('beforeunload', stopPayStatusCheck);
 </script>
