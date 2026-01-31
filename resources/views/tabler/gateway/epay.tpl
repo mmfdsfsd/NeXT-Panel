@@ -118,11 +118,8 @@ function showWxPayQr(url) {
 
 <script>
 let payCheckTimer = null;
+let hasCheckedOnce = false; // 关键：防止首次加载误判
 
-/**
- * 启动支付成功检测（最简单兜底方案）
- * 原理：定时重新请求当前页面，判断是否已显示“已支付”
- */
 function startPayStatusCheck() {
     if (payCheckTimer) return;
 
@@ -133,14 +130,27 @@ function startPayStatusCheck() {
         })
         .then(res => res.text())
         .then(html => {
-            // ⚠️ 根据你面板中“支付成功”的实际文字调整
-            if (
-                html.includes('已支付') ||
-                html.includes('支付成功') ||
-                html.includes('Paid')
-            ) {
+
+            // 1️⃣ 精准匹配“账单状态”这一栏
+            const match = html.match(
+                /账单状态<\/div>\s*<div class="datagrid-content">([^<]+)<\/div>/
+            );
+
+            if (!match) return;
+
+            const statusText = match[1].trim();
+
+            // 2️⃣ 第一次只记录状态，不做任何动作
+            if (!hasCheckedOnce) {
+                hasCheckedOnce = true;
+                return;
+            }
+
+            // 3️⃣ 后续轮询才允许触发
+            if (statusText.includes('已支付')) {
                 clearInterval(payCheckTimer);
                 payCheckTimer = null;
+
                 alert('支付成功，页面即将刷新');
                 location.reload();
             }
@@ -148,10 +158,9 @@ function startPayStatusCheck() {
         .catch(err => {
             console.warn('支付状态检测失败', err);
         });
-    }, 5000); // 每 5 秒检测一次（够稳）
+    }, 5000); // 5 秒一次，稳定不炸
 }
 
-// 页面关闭时清理定时器
 window.addEventListener('beforeunload', () => {
     if (payCheckTimer) {
         clearInterval(payCheckTimer);
