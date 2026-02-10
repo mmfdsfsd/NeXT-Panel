@@ -60,14 +60,19 @@ final class Stripe extends Base
 
         $price = $invoice->price;
 
-        if ($price < Config::obtain('stripe_min_recharge') ||
-            $price > Config::obtain('stripe_max_recharge')
-        ) {
-            return $response->withJson([
-                'ret' => 0,
-                'msg' => 'Price out of range',
-            ]);
-        }
+        $min = (float) Config::obtain('stripe_min_recharge');
+		$max = (float) Config::obtain('stripe_max_recharge');
+
+		if ($price < $min || $price > $max) {
+			return $response->withJson([
+				'ret' => 0,
+				'msg' => sprintf(
+					'充值金额需在 %.2f 元 至 %.2f 元 之间',
+					$min,
+					$max
+				),
+			]);
+		}
 
         $user = Auth::getUser();
         $pl = (new Paylist())->where('invoice_id', $invoice_id)->first();
@@ -124,7 +129,8 @@ final class Stripe extends Base
 		'payment_method_types' => [
 			'card',
 			'alipay',	
-			'wechat_pay',					
+			'wechat_pay',
+			'crypto',											   
 			],
 		'payment_method_options' => [
 			'wechat_pay' => [
