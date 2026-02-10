@@ -129,14 +129,20 @@
                     <div class="card my-3">
                         <div class="card-body">
                             <button class="btn btn-primary w-100 my-3"
-                                    hx-post="/user/order/create" hx-swap="none"
+                                    hx-post="/user/order/create" 
+                                    hx-swap="none"
+                                    hx-disabled-elt="this"
+                                    hx-indicator="#order-loading"
                                     hx-vals='js:{
                                         type: "product",
                                         coupon: document.getElementById("coupon").value,
                                         product_id: {$product->id},
                                     }'>
-                                创建订单
+                                    创建订单
                             </button>
+                            <div id="order-loading" class="htmx-indicator text-center text-muted">
+                                正在创建订单，请稍候…
+                            </div>
                         </div>
                     </div>
                 </div>
