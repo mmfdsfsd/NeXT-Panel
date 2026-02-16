@@ -39,7 +39,7 @@
                                 </div>
                                 <div class="datagrid-item">
                                     <div class="datagrid-title">订单金额</div>
-                                    <div class="datagrid-content">{$invoice->price}</div>
+                                    <div class="datagrid-content">{$invoice->price}元</div>
                                 </div>
                                 <div class="datagrid-item">
                                     <div class="datagrid-title">订单状态</div>
@@ -84,8 +84,8 @@
                                         <tr>
                                             <td>{$invoice_content_detail->name}</td>
                                             <td>{$invoice_content_detail->price}</td>
-                                        </tr>
-                                        {/foreach}
+                                        </tr>										 
+                                        {/foreach}										
                                     </tbody>
                                 </table>
                             </div>
@@ -100,7 +100,7 @@
                             <li class="nav-item">
                                 <a href="#balance" class="nav-link active" data-bs-toggle="tab">
                                     <i class="ti ti-coins icon"></i>
-                                    &nbsp;余额支付
+                                    &nbsp;账户余额:<code>{$user->money}</code>元
                                 </a>
                             </li>
                             {/if}
@@ -108,35 +108,33 @@
                             <li class="nav-item">
                                 <a href="#gateway" class="nav-link" data-bs-toggle="tab">
                                     <i class="ti ti-coin icon"></i>
-                                    &nbsp;网关支付
+                                    在线支付
                                 </a>
                             </li>
                             {/if}
                         </ul>
                         <div class="card-body">
                             <div class="tab-content">
-                                {if {$invoice_content_detail->price} <= {$user->money}}
-                                {if $invoice->type !== 'topup'}
-                                <div class="tab-pane active show" id="balance">
-                                    <div class="mb-3">
-                                        当前账户可用余额：<code>{$user->money}</code> 元
-                                    </div>
-                                    <div class="d-flex">
-                                        <button id="payBtn" class="btn btn-primary" type="button"
-                                                hx-post="/user/invoice/pay_balance" 
-                                                hx-swap="none"
-                                                hx-trigger="click once"
-                                                hx-vals='js:{
-                                                    invoice_id: {$invoice->id},
-                                                }'>
-                                            <i class="ti ti-coins icon"></i>余额支付
-                                        </button>
-                                    </div>
-                                </div>
-                                {/if}
-                                {/if}
+								{if $invoice->type !== 'topup'}
+									{if {$invoice->price} <= {$user->money}}									
+									<div class="tab-pane active show" id="balance">                                   
+										<div class="d-flex">
+											<button id="payBtn" class="btn btn-primary" type="button"
+													hx-post="/user/invoice/pay_balance" 
+													hx-swap="none"
+													hx-trigger="click once"
+													hx-vals='js:{
+														invoice_id: {$invoice->id},
+													}'>
+												<i class="ti ti-coins icon"></i>余额支付
+											</button>											
+										</div>
+									</div>
+									{/if}
+								{/if}
+								<br>
                                 {if count($payments) > 0}
-                                <div class="tab-pane show" id="gateway">
+                                <div class="tab-pane active show" id="gateway">
                                     {foreach from=$payments item=payment}
                                     <div class="mb-3">
                                         {$payment_name = $payment::_name()}
@@ -164,7 +162,7 @@
 		const btn = e.target.closest('#payBtn');
 		if (btn) {
 			btn.disabled = true;
-			btn.innerText = '余额支付处理中...';
+			btn.innerText = '支付处理中...';
 		}
 	});
 </script>
