@@ -122,12 +122,14 @@
                                         当前账户可用余额：<code>{$user->money}</code> 元
                                     </div>
                                     <div class="d-flex">
-                                        <button class="btn btn-primary" type="button"
-                                                hx-post="/user/invoice/pay_balance" hx-swap="none"
+                                        <button id="payBtn" class="btn btn-primary" type="button"
+                                                hx-post="/user/invoice/pay_balance" 
+                                                hx-swap="none"
+                                                hx-trigger="click once"
                                                 hx-vals='js:{
                                                     invoice_id: {$invoice->id},
                                                 }'>
-                                            余额支付
+                                            <i class="ti ti-coins icon"></i>余额支付
                                         </button>
                                     </div>
                                 </div>
@@ -156,3 +158,13 @@
     </div>
 
     {include file='user/footer.tpl'}
+	
+<script>
+	document.addEventListener('click', function (e) {
+		const btn = e.target.closest('#payBtn');
+		if (btn) {
+			btn.disabled = true;
+			btn.innerText = '余额支付处理中...';
+		}
+	});
+</script>
