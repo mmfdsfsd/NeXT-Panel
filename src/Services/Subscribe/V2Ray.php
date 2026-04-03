@@ -55,6 +55,23 @@ final class V2Ray extends Base
 
                 $links .= 'vmess://' . base64_encode(json_encode($v2rayn_array)) . PHP_EOL;
             }
+			if ((int) $node_raw->sort === 14) {
+                $trojan_port = $node_custom_config['offset_port_user'] ?? ($node_custom_config['offset_port_node'] ?? 443);
+                $host = $node_custom_config['host'] ?? '';
+                $allow_insecure = $node_custom_config['allow_insecure'] ?? '0';
+                $security = $node_custom_config['security'] ?? 'tls';
+                $mux = $node_custom_config['mux'] ?? '0';
+                $network = $node_custom_config['network'] ?? 'tcp';
+                $transport_plugin = $node_custom_config['transport_plugin'] ?? '';
+                $transport_method = $node_custom_config['transport_method'] ?? '';
+                $servicename = $node_custom_config['servicename'] ?? '';
+                $path = $node_custom_config['path'] ?? '';
+
+                $links .= 'trojan://' . $user->uuid . '@' . $node_raw->server . ':' . $trojan_port . '?peer=' . $host . '&sni='
+                    . $host . '&obfs=' . $transport_plugin . '&path=' . $path . '&mux=' . $mux . '&allowInsecure='
+                    . $allow_insecure . '&obfsParam=' . $transport_method . '&type=' . $network . '&security='
+                    . $security . '&serviceName=' . $servicename . '#' . $node_raw->name . PHP_EOL;
+            }
         }
 
         return $links;
