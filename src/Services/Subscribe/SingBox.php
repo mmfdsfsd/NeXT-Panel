@@ -84,56 +84,100 @@ final class SingBox extends Base
 
                     break;
                 case 11:
-                    $v2_port = $node_custom_config['offset_port_user'] ??
-                        ($node_custom_config['offset_port_node'] ?? 443);
-                    $transport = ($node_custom_config['network'] ?? '') === 'tcp' ? '' : $node_custom_config['network'];
-                    $host = $node_custom_config['header']['request']['headers']['Host'][0] ??
-                        $node_custom_config['host'] ?? '';
-		    $allow_insecure = $node_custom_config['allow_insecure'] ?? '0';
-                    $path = $node_custom_config['header']['request']['path'][0] ?? $node_custom_config['path'] ?? '';
-                    $headers = $node_custom_config['header']['request']['headers'] ?? [];
-                    $service_name = $node_custom_config['servicename'] ?? '';
-		    $tls = $node_custom_config['tls'] ?? false;
-                    $utls = $node_custom_config['utls'] ?? false;
-		    $method = $node_custom_config['method'] ?? '';
-                    $max_early_data = $node_custom_config['max_early_data'] ?? '';
-                    $early_data_header_name = $node_custom_config['early_data_header_name'] ?? '';
+					$v2_port = $node_custom_config['offset_port_user'] ??
+						($node_custom_config['offset_port_node'] ?? 443);
+					$transport = ($node_custom_config['network'] ?? '') === 'tcp'
+						? 'tcp'
+						: ($node_custom_config['network'] ?? 'tcp');
+					$host = $node_custom_config['header']['request']['headers']['Host'][0] ??
+						$node_custom_config['host'] ?? '';
+					$path = $node_custom_config['header']['request']['path'][0] ??
+						$node_custom_config['path'] ?? '/';
+					$headers = $node_custom_config['header']['request']['headers'] ?? [];
+					$service_name = $node_custom_config['servicename'] ?? '';
+					$allow_insecure = $node_custom_config['allow_insecure'] ?? false;
+					$method = $node_custom_config['method'] ?? 'GET';
+					$max_early_data = (int)($node_custom_config['max_early_data'] ?? 0);
+					$early_data_header_name = $node_custom_config['early_data_header_name'] ?? 'Sec-WebSocket-Protocol';
+
+					// ✅ server_name 兜底
+					$server_name = $host ?: $node_raw->server;
+
+					// ✅ 修复 headers（Host 不能是数组）
+					if (isset($headers['Host']) && is_array($headers['Host'])) {
+						$headers['Host'] = $headers['Host'][0];
+					}
+
+					// =========================
+					// ✅ transport 按类型构建
+					// =========================
+					$transportConfig = [];
+
+					switch ($transport) {
+
+						case 'ws':
+							$transportConfig = [
+								'type' => 'ws',
+								'path' => $path ?: '/',
+								'headers' => !empty($headers) ? $headers : [
+									'Host' => $server_name,
+								],
+								'max_early_data' => $max_early_data,
+								'early_data_header_name' => $early_data_header_name,
+							];
+							break;
+
+						case 'grpc':
+							$transportConfig = [
+								'type' => 'grpc',
+								'service_name' => $service_name ?: 'grpc',
+							];
+							break;
+
+						case 'http':
+							$transportConfig = [
+								'type' => 'http',
+								'path' => $path ?: '/',
+								'method' => $method ?: 'GET',
+								'headers' => $headers,
+							];
+							break;
+
+						case 'tcp':
+							$transportConfig = [];
+						default:
+							$transportConfig = [];
+							break;
+					}
 					
-                    $node = [
-                        'type' => 'vmess',
-                        'tag' => $node_raw->name,
-                        'server' => $node_raw->server,
-                        'server_port' => (int) $v2_port,
-                        'uuid' => $user->uuid,
-                        'security' => 'auto',						
-                        'alter_id' => 0,
-                        'tls' => [
-                            'enabled' => (bool)$tls,
+					// =========================
+					// ✅ 最终节点
+					// =========================
+					$node = [
+						'type' => 'vmess',
+						'tag' => $node_raw->name,
+						'server' => $node_raw->server,
+						'server_port' => (int)$v2_port,
+						'uuid' => $user->uuid,
+						'security' => 'auto',
+						'alter_id' => 0,
+						'tls' => [
+                            'enabled' => true,
                             'server_name' => $host,
-			    'insecure' => (bool) $allow_insecure,
-                            'utls' => [
-                                'enabled' => $utls,
-                                'fingerprint' => 'chrome',
-                            ],
+							'insecure' => (bool) $allow_insecure,
+							'utls' => [
+								'enabled' => true,
+								'fingerprint' => 'chrome',
+							],
                         ],
-                        'packet_encoding' => 'xudp',
-                        'global_padding' => true,
-                        'authenticated_length' => true,
-                        'transport' => [
-                            'type' => $transport,
-                            'path' => $path,
-			    'method' => $method,
-                            'headers' => $headers,
-                            'service_name' => $service_name,
-                            'max_early_data' => (int) $max_early_data,
-                            'early_data_header_name' => $early_data_header_name,
-                        ],
-                    ];
+						// 性能优化（推荐保留）
+						'packet_encoding' => 'xudp',
+						'global_padding' => true,
+						'authenticated_length' => true,
+						'transport' => $transportConfig,
+					];					
 
-                    $node['tls'] = array_filter($node['tls']);
-                    $node['transport'] = array_filter($node['transport']);
-
-                    break;
+					break;
                 case 14:
                     $trojan_port = $node_custom_config['offset_port_user'] ??
                         ($node_custom_config['offset_port_node'] ?? 443);
