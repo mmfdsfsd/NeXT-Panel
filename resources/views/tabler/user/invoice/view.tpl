@@ -12,21 +12,22 @@
                         <span class="home-subtitle">账单详情</span>
                     </div>
                 </div>
-                <div class="col-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                    </div>
-                </div>
             </div>
         </div>
     </div>
+
     <div class="page-body">
         <div class="container-xl">
             <div class="row row-cards">
+
+                <!-- 左侧：账单信息 -->
                 {if $invoice->status === 'unpaid' || $invoice->status === 'partially_paid'}
-                <div class="col-sm-12 col-md-6 col-lg-9">
+                <div class="col-sm-12 col-lg-9">
                 {else}
                 <div class="col-md-12">
                 {/if}
+
+                    <!-- 基本信息 -->
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">基本信息</h3>
@@ -57,22 +58,18 @@
                                     <div class="datagrid-title">支付时间</div>
                                     <div class="datagrid-content">{$invoice->pay_time}</div>
                                 </div>
-                                {if $invoice->status === 'paid_gateway'}
-                                <div class="datagrid-item">
-                                    <div class="datagrid-title">支付网关单号</div>
-                                    <div class="datagrid-content">{$paylist->tradeno}</div>
-                                </div>
-                                {/if}
                             </div>
                         </div>
                     </div>
+
+                    <!-- 账单详情 -->
                     <div class="card my-3">
                         <div class="card-header">
                             <h3 class="card-title">账单详情</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="invoice_content_table" class="table table-vcenter card-table">
+                                <table class="table table-vcenter card-table">
                                     <thead>
                                     <tr>
                                         <th>名称</th>
@@ -80,89 +77,133 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        {foreach $invoice_content as $invoice_content_detail}
-                                        <tr>
-                                            <td>{$invoice_content_detail->name}</td>
-                                            <td>{$invoice_content_detail->price}</td>
-                                        </tr>										 
-                                        {/foreach}										
+                                    {foreach $invoice_content as $item}
+                                    <tr>
+                                        <td>{$item->name}</td>
+                                        <td>{$item->price}</td>
+                                    </tr>
+                                    {/foreach}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- 右侧：支付区域 -->
                 {if $invoice->status === 'unpaid' || $invoice->status === 'partially_paid'}
-                <div class="col-sm-12 col-md-6 col-lg-3">
-                    <div class="card">
-                        <ul class="nav nav-tabs nav-fill" data-bs-toggle="tabs">
-                            {if $invoice->type !== 'topup'}
-                            <li class="nav-item">
-                                <a href="#balance" class="nav-link active" data-bs-toggle="tab">
-                                    <i class="ti ti-coins icon"></i>
-                                    &nbsp;账户余额:<code>{$user->money}</code>元
-                                </a>
-                            </li>
-                            {/if}
-                            {if count($payments) > 0}
-                            <li class="nav-item">
-                                <a href="#gateway" class="nav-link" data-bs-toggle="tab">
-                                    <i class="ti ti-coin icon"></i>
-                                    在线支付
-                                </a>
-                            </li>
-                            {/if}
-                        </ul>
+                <div class="col-sm-12 col-lg-3">
+
+                    <!-- 💰 余额支付 -->
+                    {if $invoice->type !== 'topup'}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="ti ti-coins"></i> 余额支付
+                            </h3>
+                        </div>
                         <div class="card-body">
-                            <div class="tab-content">
-								{if $invoice->type !== 'topup'}
-									{if {$invoice->price} <= {$user->money}}									
-									<div class="tab-pane active show" id="balance">                                   
-										<div class="d-flex">
-											<button id="payBtn" class="btn btn-primary" type="button"
-													hx-post="/user/invoice/pay_balance" 
-													hx-swap="none"
-													hx-trigger="click once"
-													hx-vals='js:{
-														invoice_id: {$invoice->id},
-													}'>
-												<i class="ti ti-coins icon"></i>余额支付
-											</button>											
-										</div>
-									</div>
-									{/if}
-								{/if}
-								<br>
-                                {if count($payments) > 0}
-                                <div class="tab-pane active show" id="gateway">
-                                    {foreach from=$payments item=payment}
-                                    <div class="mb-3">
-                                        {$payment_name = $payment::_name()}
-                                        {include file="../../gateway/$payment_name.tpl"}
-                                    </div>
-                                    {/foreach}
-                                </div>
-                                {/if}
-                                {if $invoice->type === 'topup' && count($payments) === 0}
-                                暂无可用支付方式
-                                {/if}
+
+                            <div class="mb-2">
+                                当前余额：<code>{$user->money}</code> 元
                             </div>
+
+                            {if $invoice->price <= $user->money}
+                            <button id="payBtn"
+                                    class="btn btn-primary w-100"
+                                    hx-post="/user/invoice/pay_balance"
+                                    hx-swap="none"
+                                    hx-trigger="click once"
+                                    hx-vals='js:{
+                                        invoice_id: {$invoice->id},
+                                    }'>
+                                <i class="ti ti-coins"></i> 使用余额支付
+                            </button>
+                            {else}
+                            <div class="mt-2">
+								<a href="/user/money" class="btn btn-warning w-100">
+									<i class="ti ti-arrow-up-right"></i> 充值余额
+								</a>
+							</div>
+                            {/if}
+
                         </div>
                     </div>
+                    {/if}
+
+                    <!-- 💳 在线支付 -->
+                    {if count($payments) > 0}
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="ti ti-credit-card"></i> 在线支付
+                            </h3>
+                        </div>
+                        <div class="card-body">
+
+                            <div class="d-flex flex-column gap-2">
+								{foreach from=$payments item=payment}
+								<div class="card p-2 pay-card">
+									{$payment_name = $payment::_name()}
+									{include file="../../gateway/$payment_name.tpl"}
+								</div>
+								{/foreach}
+							</div>
+
+                        </div>
+                    </div>
+                    {/if}
+
                 </div>
                 {/if}
+
             </div>
         </div>
     </div>
 
-    {include file='user/footer.tpl'}
-	
+{include file='user/footer.tpl'}
+
+<style>
+/* 支付按钮布局 */
+.epay {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.epay button {
+    width: 100%;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 图标大小修复 */
+.epay img {
+    height: 18px !important;
+    margin-right: 6px;
+}
+
+/* 支付卡片 hover 动效 */
+.pay-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pay-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+</style>
+
 <script>
-	document.addEventListener('click', function (e) {
-		const btn = e.target.closest('#payBtn');
-		if (btn) {
-			btn.disabled = true;
-			btn.innerText = '支付处理中...';
-		}
-	});
+/* 防止重复点击 */
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('#payBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '支付处理中...';
+    }
+});
 </script>
