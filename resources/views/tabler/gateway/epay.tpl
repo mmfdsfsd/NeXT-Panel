@@ -25,7 +25,7 @@
 					alert('网络请求失败');
 				}
 			  ">
-			  <img src="/images/alipay.png" height="2px"/>
+			  <img src="/images/alipay.png"/>
 			  支付宝(+3%手续费)
 			</button>
 			{/if}
@@ -70,7 +70,7 @@
 						type: "qqpay",
 						redir: window.location.href
 					}'>
-				<img src="/images/qq.svg" height="2px"/>
+				<img src="/images/qq.svg"/>
 			</button>
 			{/if}
 			
@@ -96,7 +96,7 @@
 							alert('网络请求失败');
 						}
 					">
-				<img src="/images/tdbpay.png" height="2px"/>
+				<img src="/images/tdbpay.png"/>
 			</button>
 			{/if}
 		</form>
