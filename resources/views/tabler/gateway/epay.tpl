@@ -53,12 +53,12 @@
 					alert('网络请求失败');
 				}
 			  ">
-			  <img src="/images/wechat.png" height="2px"/>
+			  <img src="/images/wechat.png"/>
 			  &nbsp;微信 (+2.5%手续费)
 			</button>
 			<div id="wxpay-qrcode-box" style="display:none; text-align:center; margin-top:15px;">
 				<p><b>请使用微信扫一扫完成支付</b></p>
-				<div id="wxpay-qrcode"></div>
+				<div id="wxpay-qrcode" class="wxpay-qrcode-container"></div>
 			</div>
 			{/if}
 			
@@ -114,7 +114,10 @@ function showWxPayQr(url) {
     new QRCode(qr, {
         text: url,
         width: 220,
-        height: 220
+        height: 220,
+		colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
     });
 }
 </script>
