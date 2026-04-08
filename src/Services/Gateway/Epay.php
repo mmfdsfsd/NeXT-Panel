@@ -83,6 +83,18 @@ final class Epay extends Base
             ]);
         }
 
+		// 如果前端传入的是 USDT，则切换 API 地址和商户信息
+		if ($type === 'usdt') {
+			$this->epay['apiurl'] = 'https://baidu.com';        // USDT 易支付API地址
+			$this->epay['partner'] = '1000';                      // USDT 商户pid
+			$this->epay['key'] = 'NDWNDoCFSDFBVCHGFHGFHD6A993VDD3'; // USDT 商户Key
+		} else {
+			// 默认配置
+			$this->epay['apiurl'] = Config::obtain('epay_url');
+			$this->epay['partner'] = Config::obtain('epay_pid');
+			$this->epay['key'] = Config::obtain('epay_key');
+		}
+		
         $user = Auth::getUser();
         $pl = new Paylist();
         $pl->userid = $user->id;
