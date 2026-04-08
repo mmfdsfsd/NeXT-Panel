@@ -117,7 +117,7 @@
                                     hx-vals='js:{
                                         invoice_id: {$invoice->id},
                                     }'>
-                                <i class="ti ti-coins"></i> 使用余额支付
+                                <i class="ti ti-coins"></i> &nbsp;使用余额支付
                             </button>
                             {else}
                             <div class="mt-2">
@@ -179,10 +179,22 @@
     justify-content: center;
 }
 
-/* 图标大小修复 */
-.epay img {
+/* 仅控制支付按钮图标 */
+.epay > button > img.icon {
     height: 18px !important;
     margin-right: 6px;
+}
+
+/* 微信二维码容器 */
+#wxpay-qrcode-box {
+    display: none;
+    text-align: center;
+    margin-top: 15px;
+}
+
+#wxpay-qrcode {
+    width: 220px !important;
+    height: 220px !important;
 }
 
 /* 支付卡片 hover 动效 */
