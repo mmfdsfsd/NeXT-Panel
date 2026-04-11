@@ -1,8 +1,8 @@
 <div class="card-inner">
-	<b>支付宝 / 微信</b>
+	<b>支付宝 / 微信 / USDT</b>
 	<div class="mt-2">
 		<form class="epay" name="epay" method="post" style="display:flex; flex-wrap:wrap; gap:12px;">
-			{if $public_setting['epay_alipay']}
+			{if $public_setting['epay_alipay']}			
 			<button
 			  class="btn btn-flat waves-attach"
 			  hx-post="/user/payment/purchase/epay"
@@ -16,7 +16,12 @@
 				if (event.detail.successful) {
 					const res = JSON.parse(event.detail.xhr.responseText);
 					if (res.ret === 1 && res.payurl) {
-						window.open(res.payurl, '_blank');
+						if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+							showAlipayQr(res.payurl);
+<!--							window.location.href = res.payurl;   -->
+						} else {
+							showAlipayQr(res.payurl); 
+						}
 						startPayStatusCheck();
 					} else {
 						alert('支付失败：' + (res.msg || '未知错误'));
@@ -26,8 +31,12 @@
 				}
 			  ">
 			  <img src="/images/alipay.png"/>
-			  支付宝(+3%手续费)
+			  支付宝(+1%手续费)
 			</button>
+			<div id="alipay-qrcode-box" style="display:none; text-align:center; margin-top:15px;">
+				<p><b>请使用支付宝扫码完成支付</b></p>
+				<div id="alipay-qrcode"></div>
+			</div>
 			{/if}
 			
 			{if $public_setting['epay_wechat']}
@@ -97,12 +106,30 @@
 						}
 					">
 				<img src="/images/tdbpay.png"/>
+				&nbsp;&nbsp;USDT-( Trc20协议 )
 			</button>
 			{/if}
 		</form>
 	</div>
 </div>
 
+<script>
+function showAlipayQr(url) {
+    const box = document.getElementById('alipay-qrcode-box');
+    const qr = document.getElementById('alipay-qrcode');
+
+    qr.innerHTML = '';
+    box.style.display = 'block';
+
+    new QRCode(qr, {
+        text: url,
+        width: 220,
+        height: 220,
+		colorDark: "#4DA3FF",   
+		colorLight: "#FFFFFF"
+    });
+}
+</script>
 <script>
 function showWxPayQr(url) {
     const box = document.getElementById('wxpay-qrcode-box');
@@ -116,8 +143,8 @@ function showWxPayQr(url) {
         width: 220,
         height: 220,
 		colorDark : "#000000",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
+        colorDark: "#4CD964",   
+		colorLight: "#FFFFFF"
     });
 }
 </script>
