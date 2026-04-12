@@ -85,7 +85,8 @@ final class Clash extends Base
                         ($node_custom_config['offset_port_node'] ?? 443);
                     $method = $node_custom_config['method'] ?? '2022-blake3-aes-128-gcm';
                     $user_pk = Tools::genSs2022UserPk($user->passwd, $method);
-
+					$plugin = $node_custom_config['plugin'] ?? '';
+                    $plugin_option = $node_custom_config['plugin_option'] ?? null;
                     if (! $user_pk) {
                         $node = [];
                         break;
@@ -103,6 +104,8 @@ final class Clash extends Base
                         'password' => $server_key === '' ? $user_pk : $server_key . ':' .$user_pk,
                         'cipher' => $method,
                         'udp' => (bool) $udp,
+						'plugin' => $plugin,
+						'$plugin-opts' => $plugin-opts,
                     ];
 
                     break;
