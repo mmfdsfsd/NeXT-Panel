@@ -86,7 +86,28 @@ final class Clash extends Base
                     $method = $node_custom_config['method'] ?? '2022-blake3-aes-128-gcm';
                     $user_pk = Tools::genSs2022UserPk($user->passwd, $method);
 					$plugin = $node_custom_config['plugin'] ?? '';
-                    $plugin_option = $node_custom_config['plugin_option'] ?? null;
+                    $plugin_option = null;
+					switch ($plugin) {
+						case 'shadow-tls':
+							$plugin_option = [
+								'host' => 'captive.apple.com',
+								'password' => '123456',
+								'version' => 3,
+							];
+							break;
+
+						case 'restls':
+							$plugin_option = [
+								'host' => 'captive.apple.com',
+								'password' => '123456',
+								'version-hint' => 'tls13',
+								'restls-script' => '300?100<1,400~100,350~100,600~100,300~200,300~100',
+							];
+							break;
+
+						default:
+							$plugin_option = [];
+					}
                     if (! $user_pk) {
                         $node = [];
                         break;
@@ -105,7 +126,7 @@ final class Clash extends Base
                         'cipher' => $method,
                         'udp' => (bool) $udp,
 						'plugin' => $plugin,
-						'$plugin-opts' => $plugin-opts,
+						'plugin-opts' => $plugin-option,
                     ];
 
                     break;
