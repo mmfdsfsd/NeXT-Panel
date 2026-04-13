@@ -154,66 +154,16 @@ function showWxPayQr(url) {
 <script>
 let payCheckTimer = null;
 
-function startPayStatusCheck(tradeno) {
-    // --- 调试信息开始 ---
-    console.log("初始化支付检测...");
-    console.log("接收到的订单号 (tradeno):", tradeno);
-    
-    if (!tradeno || tradeno === 'undefined') {
-        console.error("错误：未能获取到有效的 tradeno，请检查后端接口返回内容。");
-        return;
-    }
-    // --- 调试信息结束 ---
-
-    if (payCheckTimer) clearInterval(payCheckTimer);
-
-    let count = 0; 
-    const maxAttempts = 120; 
-
-    payCheckTimer = setInterval(() => {
-        count++;
-        console.log(`[轮询检测] 第 ${count} 次询问订单 ${tradeno} 的状态...`);
-
-        if (count > maxAttempts) {
-            clearInterval(payCheckTimer);
-            console.log("检测超时，已停止。");
-            return;
-        }
-
-        fetch(`/user/payment/status?tradeno=${tradeno}&t=${Date.now()}`)
-            .then(res => {
-                if (!res.ok) throw new Error('网络响应异常: ' + res.status);
-                return res.json();
-            })
-            .then(data => {
-                if (data.ret === 1 && data.is_paid === true) {
-                    console.log("检测成功：订单已支付！");
-                    clearInterval(payCheckTimer);
-                    alert('支付成功！');
-                    location.reload();
-                }
-            })
-            .catch(err => console.warn('轮询请求出错:', err));
-    }, 5000);
-}
-</script>
-{/literal}
-
-{literal}
-<script>
-let payCheckTimer = null;
-
 // 绿色提示框：水平居中显示
 function showSuccessToast() {
     const toast = document.createElement('div');
     toast.innerHTML = '<strong>✓ 支付成功</strong><br>正在为您跳转...';
     
-    // 设置居中样式
     const styles = {
         position: 'fixed',
-        top: '20%',           // 距离顶部 20% 的位置，看起来更显眼
-        left: '50%',          // 移动到屏幕水平正中间
-        transform: 'translateX(-50%)', // 关键：向左偏移自身宽度的 50%，实现完美居中
+        top: '20%',
+        left: '50%',
+        transform: 'translateX(-50%)',
         backgroundColor: '#4CAF50',
         color: 'white',
         padding: '16px 32px',
@@ -226,7 +176,6 @@ function showSuccessToast() {
         minWidth: '200px'
     };
 
-    // 循环赋值，避免直接在 Object.assign 中写大括号引起 Smarty 误判
     for (const key in styles) {
         toast.style[key] = styles[key];
     }
@@ -237,14 +186,28 @@ function showSuccessToast() {
 function startPayStatusCheck(tradeno) {
     if (payCheckTimer) clearInterval(payCheckTimer);
 
+    let count = 0;             // 计数器初始化
+    const maxAttempts = 120;   // 最大轮询 120 次 (10分钟)
+
     payCheckTimer = setInterval(() => {
+        count++;
+        // 调试：可以在控制台看到进度
+        console.log(`第 ${count} 次检测订单: ${tradeno}`);
+
+        // 检查是否超过最大次数
+        if (count > maxAttempts) {
+            clearInterval(payCheckTimer);
+            console.warn("轮询超时，已停止检测。");
+            return;
+        }
+
         fetch(`/user/payment/status?tradeno=${tradeno}&t=${Date.now()}`)
             .then(res => res.json())
             .then(data => {
                 if (data.ret === 1 && data.is_paid === true) {
+                    // 支付成功，清除定时器
                     clearInterval(payCheckTimer);
                     
-                    // 显示居中的成功提示
                     showSuccessToast();
                     
                     setTimeout(() => {
@@ -253,7 +216,7 @@ function startPayStatusCheck(tradeno) {
                 }
             })
             .catch(err => console.warn('检测出错:', err));
-    }, 5000);
+    }, 5000); // 5秒轮询一次
 }
 </script>
 {/literal}
