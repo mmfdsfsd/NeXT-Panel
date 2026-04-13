@@ -198,3 +198,62 @@ function startPayStatusCheck(tradeno) {
 }
 </script>
 {/literal}
+
+{literal}
+<script>
+let payCheckTimer = null;
+
+// 绿色提示框：水平居中显示
+function showSuccessToast() {
+    const toast = document.createElement('div');
+    toast.innerHTML = '<strong>✓ 支付成功</strong><br>正在为您跳转...';
+    
+    // 设置居中样式
+    const styles = {
+        position: 'fixed',
+        top: '20%',           // 距离顶部 20% 的位置，看起来更显眼
+        left: '50%',          // 移动到屏幕水平正中间
+        transform: 'translateX(-50%)', // 关键：向左偏移自身宽度的 50%，实现完美居中
+        backgroundColor: '#4CAF50',
+        color: 'white',
+        padding: '16px 32px',
+        borderRadius: '8px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+        zIndex: '10000',
+        textAlign: 'center',
+        transition: 'all 0.5s ease',
+        fontFamily: 'sans-serif',
+        minWidth: '200px'
+    };
+
+    // 循环赋值，避免直接在 Object.assign 中写大括号引起 Smarty 误判
+    for (const key in styles) {
+        toast.style[key] = styles[key];
+    }
+
+    document.body.appendChild(toast);
+}
+
+function startPayStatusCheck(tradeno) {
+    if (payCheckTimer) clearInterval(payCheckTimer);
+
+    payCheckTimer = setInterval(() => {
+        fetch(`/user/payment/status?tradeno=${tradeno}&t=${Date.now()}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.ret === 1 && data.is_paid === true) {
+                    clearInterval(payCheckTimer);
+                    
+                    // 显示居中的成功提示
+                    showSuccessToast();
+                    
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                }
+            })
+            .catch(err => console.warn('检测出错:', err));
+    }, 5000);
+}
+</script>
+{/literal}
