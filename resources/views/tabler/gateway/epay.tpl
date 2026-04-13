@@ -13,16 +13,18 @@
 				  redir: window.location.href
 			  }'
 			  hx-on::after-request="
-				if (event.detail.successful) {
-					const res = JSON.parse(event.detail.xhr.responseText);
+				if (event.detail.successful) {					
+					const res = JSON.parse(event.detail.xhr.responseText);										
 					if (res.ret === 1 && res.payurl) {
-						if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-							showAlipayQr(res.payurl);
-<!--							window.location.href = res.payurl;   -->
-						} else {
-							showAlipayQr(res.payurl); 
-						}
-						startPayStatusCheck();
+						// pc端使用 window.open 在新窗口打开，'_blank' 参数表示新标签页
+						const newWindow = window.open(res.payurl, '_blank');
+						startPayStatusCheck(res.tradeno);
+						// 兼容性检查：如果浏览器拦截了弹窗（例如用户未点击直接触发）
+						if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+							// 如果被拦截，降级为当前页面跳转，或者提示用户
+							window.location.href = res.payurl;
+						}					
+												
 					} else {
 						alert('支付失败：' + (res.msg || '未知错误'));
 					}
@@ -33,10 +35,11 @@
 			  <img src="/images/alipay.png"/>
 			  支付宝(+1%手续费)
 			</button>
+			<!--
 			<div id="alipay-qrcode-box" style="display:none; text-align:center; margin-top:15px;">
 				<p><b>请使用支付宝扫码完成支付</b></p>
 				<div id="alipay-qrcode"></div>
-			</div>
+			</div>  -->
 			{/if}
 			
 			{if $public_setting['epay_wechat']}
@@ -53,8 +56,8 @@
 				if (event.detail.successful) {
 					const res = JSON.parse(event.detail.xhr.responseText);
 					if (res.ret === 1 && res.payurl) {
-						showWxPayQr(res.payurl);
-						startPayStatusCheck();
+						showWxPayQr(res.payurl);						
+						startPayStatusCheck(res.tradeno);	
 					} else {
 						alert('支付失败：' + (res.msg || '未知错误'));
 					}
@@ -93,13 +96,13 @@
 					}'
 					hx-on::after-request="
 						if(event.detail.successful) {						
-							const responseData = JSON.parse(event.detail.xhr.responseText);
-							if (responseData.ret === 1 && responseData.payurl) {
-								window.open(responseData.payurl, '_blank');
-								startPayStatusCheck();
-							} else if (responseData.ret === 0) {
+							const res = JSON.parse(event.detail.xhr.responseText);
+							if (res.ret === 1 && res.payurl) {
+								window.open(res.payurl, '_blank');
+								startPayStatusCheck(res.tradeno);
+							} else if (res.ret === 0) {
 								// 处理后端返回的错误信息
-								alert('支付失败: ' + responseData.msg);
+								alert('支付失败: ' + res.msg);
 							}
 						} else {
 							alert('网络请求失败');
@@ -142,80 +145,56 @@ function showWxPayQr(url) {
         text: url,
         width: 220,
         height: 220,
-		colorDark : "#000000",
         colorDark: "#4CD964",   
 		colorLight: "#FFFFFF"
     });
 }
 </script>
-
+{literal}
 <script>
 let payCheckTimer = null;
-let payTimeoutTimer = null;
-let hasCheckedOnce = false;
 
-const PAY_CHECK_INTERVAL = 5000;       // 5 秒检测一次
-const PAY_MAX_DURATION  = 10 * 60 * 1000; // 10 分钟超时
+function startPayStatusCheck(tradeno) {
+    // --- 调试信息开始 ---
+    console.log("初始化支付检测...");
+    console.log("接收到的订单号 (tradeno):", tradeno);
+    
+    if (!tradeno || tradeno === 'undefined') {
+        console.error("错误：未能获取到有效的 tradeno，请检查后端接口返回内容。");
+        return;
+    }
+    // --- 调试信息结束 ---
 
-function startPayStatusCheck() {
-    if (payCheckTimer) return;
+    if (payCheckTimer) clearInterval(payCheckTimer);
 
-    hasCheckedOnce = false;
+    let count = 0; 
+    const maxAttempts = 120; 
 
-    // ① 启动轮询
     payCheckTimer = setInterval(() => {
-        fetch(window.location.href, {
-            cache: 'no-store',
-            credentials: 'same-origin'
-        })
-        .then(res => res.text())
-        .then(html => {
+        count++;
+        console.log(`[轮询检测] 第 ${count} 次询问订单 ${tradeno} 的状态...`);
 
-            // 精准匹配“账单状态”
-            const match = html.match(
-                /账单状态<\/div>\s*<div class="datagrid-content">([^<]+)<\/div>/
-            );
+        if (count > maxAttempts) {
+            clearInterval(payCheckTimer);
+            console.log("检测超时，已停止。");
+            return;
+        }
 
-            if (!match) return;
-
-            const statusText = match[1].trim();
-
-            // 第一次仅记录，防止误判
-            if (!hasCheckedOnce) {
-                hasCheckedOnce = true;
-                return;
-            }
-
-            // 已支付
-            if (statusText.includes('已支付')) {
-                stopPayStatusCheck();
-                alert('支付成功，页面即将刷新');
-                location.reload();
-            }
-        })
-        .catch(err => {
-            console.warn('支付状态检测失败', err);
-        });
-    }, PAY_CHECK_INTERVAL);
-
-    // ② 启动超时兜底
-    payTimeoutTimer = setTimeout(() => {
-        stopPayStatusCheck();
-        alert('支付超时，如已完成支付请手动刷新页面');
-    }, PAY_MAX_DURATION);
+        fetch(`/user/payment/status?tradeno=${tradeno}&t=${Date.now()}`)
+            .then(res => {
+                if (!res.ok) throw new Error('网络响应异常: ' + res.status);
+                return res.json();
+            })
+            .then(data => {
+                if (data.ret === 1 && data.is_paid === true) {
+                    console.log("检测成功：订单已支付！");
+                    clearInterval(payCheckTimer);
+                    alert('支付成功！');
+                    location.reload();
+                }
+            })
+            .catch(err => console.warn('轮询请求出错:', err));
+    }, 5000);
 }
-
-function stopPayStatusCheck() {
-    if (payCheckTimer) {
-        clearInterval(payCheckTimer);
-        payCheckTimer = null;
-    }
-    if (payTimeoutTimer) {
-        clearTimeout(payTimeoutTimer);
-        payTimeoutTimer = null;
-    }
-}
-
-// 页面关闭时清理
-window.addEventListener('beforeunload', stopPayStatusCheck);
 </script>
+{/literal}
