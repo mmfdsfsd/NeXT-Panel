@@ -167,6 +167,7 @@ final class Epay extends Base
 				'ret' => 1,
 				'msg' => '请在打开的收银台完成付款',
 				'payurl' => $payUrl,
+				'tradeno' => $pl->tradeno,					   
 			]);
 
 
@@ -198,6 +199,23 @@ final class Epay extends Base
         return $response->write('failed');
     }
 
+	public function getPayStatus($request, $response, $args): ResponseInterface
+	{
+		// 获取前端传来的 tradeno (对应 URL 里的 ?tradeno=xxx)
+		$tradeno = $request->getParam('tradeno');
+		$paylist = (new Paylist())->where('tradeno', $tradeno)->first();
+
+		if ($paylist === null) {
+			return $response->withJson(['ret' => 0, 'is_paid' => false]);
+		}
+
+		// status 为 1 代表 postPayment 已经执行，支付成功
+		return $response->withJson([
+			'ret' => 1,
+			'is_paid' => ($paylist->status === 1)
+		]);
+	}
+	
     /**
      * @throws Exception
      */
