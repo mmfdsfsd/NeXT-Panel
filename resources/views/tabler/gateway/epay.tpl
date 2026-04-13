@@ -16,15 +16,13 @@
 				if (event.detail.successful) {					
 					const res = JSON.parse(event.detail.xhr.responseText);										
 					if (res.ret === 1 && res.payurl) {
-						// pc端使用 window.open 在新窗口打开，'_blank' 参数表示新标签页
-						const newWindow = window.open(res.payurl, '_blank');
-						startPayStatusCheck(res.tradeno);
-						// 兼容性检查：如果浏览器拦截了弹窗（例如用户未点击直接触发）
-						if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-							// 如果被拦截，降级为当前页面跳转，或者提示用户
+						const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+						if (isMobile) {							
 							window.location.href = res.payurl;
-						}					
-												
+						} else {
+							showAlipayQr(res.payurl);
+						}						
+						startPayStatusCheck(res.tradeno);				
 					} else {
 						alert('支付失败：' + (res.msg || '未知错误'));
 					}
@@ -34,12 +32,11 @@
 			  ">
 			  <img src="/images/alipay.png"/>
 			  支付宝(+1%手续费)
-			</button>
-			<!--
+			</button>			
 			<div id="alipay-qrcode-box" style="display:none; text-align:center; margin-top:15px;">
 				<p><b>请使用支付宝扫码完成支付</b></p>
 				<div id="alipay-qrcode"></div>
-			</div>  -->
+			</div> 
 			{/if}
 			
 			{if $public_setting['epay_wechat']}
@@ -100,8 +97,7 @@
 							if (res.ret === 1 && res.payurl) {
 								window.open(res.payurl, '_blank');
 								startPayStatusCheck(res.tradeno);
-							} else if (res.ret === 0) {
-								// 处理后端返回的错误信息
+							} else if (res.ret === 0) {								
 								alert('支付失败: ' + res.msg);
 							}
 						} else {
@@ -129,7 +125,8 @@ function showAlipayQr(url) {
         width: 220,
         height: 220,
 		colorDark: "#4DA3FF",   
-		colorLight: "#FFFFFF"
+		colorLight: "#FFFFFF",
+		correctLevel: QRCode.CorrectLevel.Q
     });
 }
 </script>
@@ -150,6 +147,7 @@ function showWxPayQr(url) {
     });
 }
 </script>
+
 {literal}
 <script>
 let payCheckTimer = null;
