@@ -116,7 +116,7 @@ final class Clash extends Base
                     // Clash 特定配置
                     $udp = $node_custom_config['udp'] ?? true;
                     $server_key = $node_custom_config['server_key'] ?? '';
-
+					$uot = $node_custom_config['uot'] ?? true;
                     $node = [
                         'name' => $node_raw->name,
                         'type' => 'ss',
@@ -125,6 +125,7 @@ final class Clash extends Base
                         'password' => $server_key === '' ? $user_pk : $server_key . ':' .$user_pk,
                         'cipher' => $method,
                         'udp' => (bool) $udp,
+						'udp_over_tcp' => (bool) $uot,
 						'plugin' => $plugin,
 						'plugin-opts' => $plugin-option,
                     ];
