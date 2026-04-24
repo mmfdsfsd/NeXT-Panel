@@ -166,15 +166,6 @@ $_ENV['SingBox_Config'] = [
 		'action' => 'sniff',
 		'timeout' => '1s',
 	  ],
-		
-	  [
-        'inbound' => 'in',
-        'protocol' => 'dns',
-        'port' => [
-            53,
-          ],
-        'action' => 'hijack-dns',
-      ],
 
       // 劫持 DNS
       [
