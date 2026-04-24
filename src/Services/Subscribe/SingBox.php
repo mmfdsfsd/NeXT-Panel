@@ -126,7 +126,7 @@ final class SingBox extends Base
 								'early_data_header_name' => $early_data_header_name,
 							];
 							break;
-
+							
 						case 'grpc':
 							$transportConfig = [
 								'type' => 'grpc',
@@ -134,11 +134,27 @@ final class SingBox extends Base
 							];
 							break;
 
+						case 'quic':
+							$transportConfig = [
+								'type' => 'quic',
+							];
+							break;
+
 						case 'http':
 							$transportConfig = [
 								'type' => 'http',
+								'host' => $server_name,
 								'path' => $path ?: '/',
 								'method' => $method ?: 'GET',
+								'headers' => $headers,
+							];
+							break;
+						
+						case 'httpupgrade':
+							$transportConfig = [
+								'type' => 'httphttpupgrade',
+								'host' => $server_name,
+								'path' => $path ?: '/',								
 								'headers' => $headers,
 							];
 							break;
@@ -148,8 +164,7 @@ final class SingBox extends Base
 						default:
 							$transportConfig = [];
 							break;
-					}
-					
+					}					
 					// =========================
 					// ✅ 最终节点
 					// =========================
@@ -187,7 +202,74 @@ final class SingBox extends Base
                     $path = $node_custom_config['header']['request']['path'][0] ?? $node_custom_config['path'] ?? '';
                     $headers = $node_custom_config['header']['request']['headers'] ?? [];
                     $service_name = $node_custom_config['servicename'] ?? '';
+					// ✅ server_name 兜底
+					$server_name = $host ?: $node_raw->server;
 
+					// ✅ 修复 headers（Host 不能是数组）
+					if (isset($headers['Host']) && is_array($headers['Host'])) {
+						$headers['Host'] = $headers['Host'][0];
+					}
+
+					// =========================
+					// ✅ transport 按类型构建
+					// =========================
+					$transportConfig = [];
+
+					switch ($transport) {
+
+						case 'ws':
+							$transportConfig = [
+								'type' => 'ws',
+								'path' => $path ?: '/',
+								'headers' => !empty($headers) ? $headers : [
+									'Host' => $server_name,
+								],
+								'max_early_data' => $max_early_data,
+								'early_data_header_name' => $early_data_header_name,
+							];
+							break;
+							
+						case 'grpc':
+							$transportConfig = [
+								'type' => 'grpc',
+								'service_name' => $service_name ?: 'grpc',
+							];
+							break;
+
+						case 'quic':
+							$transportConfig = [
+								'type' => 'quic',
+							];
+							break;
+
+						case 'http':
+							$transportConfig = [
+								'type' => 'http',
+								'host' => $server_name,
+								'path' => $path ?: '/',
+								'method' => $method ?: 'GET',
+								'headers' => $headers,
+							];
+							break;
+						
+						case 'httpupgrade':
+							$transportConfig = [
+								'type' => 'httphttpupgrade',
+								'host' => $server_name,
+								'path' => $path ?: '/',								
+								'headers' => $headers,
+							];
+							break;
+
+						case 'tcp':
+							$transportConfig = [];
+						default:
+							$transportConfig = [];
+							break;
+					}					
+					// =========================
+					// ✅ 最终节点
+					// =========================
                     $node = [
                         'type' => 'trojan',
                         'tag' => $node_raw->name,
@@ -199,12 +281,7 @@ final class SingBox extends Base
                             'server_name' => $host,
                             'insecure' => (bool) $allow_insecure,
                         ],
-                        'transport' => [
-                            'type' => $transport,
-                            'path' => $path,
-                            'headers' => $headers,
-                            'service_name' => $service_name,
-                        ],
+                        'transport' => $transportConfig,
                     ];
 
                     $node['tls'] = array_filter($node['tls']);
