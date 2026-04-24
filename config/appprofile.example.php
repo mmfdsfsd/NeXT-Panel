@@ -44,194 +44,223 @@ $_ENV['V2RayJson_Config'] = [
 ];
 
 $_ENV['SingBox_Config'] = [
-    'log' => [
-        'disabled' => false,
-        'level' => 'error',
-        'timestamp' => true,
+
+  'log' => [
+    'level' => 'error',
+    'timestamp' => true,
+  ],
+
+  // ================= DNS =================
+  'dns' => [
+    'servers' => [
+
+      // 本地 DNS（系统）
+      [
+        'tag' => 'local',
+        'type' => 'local',
+      ],
+
+      // 国内 DNS（保证 CN 命中正确 CDN）
+      [
+        'tag' => 'alidns',
+        'type' => 'udp',
+        'server' => '223.5.5.5',
+      ],
+
+      // 国外 DNS（走代理）
+      [
+        'tag' => 'cloudflare',
+        'type' => 'udp',
+        'server' => '1.1.1.1',
+      ],
+
+      // fakeip（仅用于代理流量）
+      [
+        'tag' => 'fakeip',
+        'type' => 'fakeip',
+        'inet4_range' => '198.18.0.0/15',
+        'inet6_range' => 'fc00::/18',
+      ],
     ],
-    'dns' => [
-        'servers' => [
-            [
-                'tag' => 'local',
-                'address' => 'local',
-                'detour' => 'direct',
-            ],
-            [
-                'tag' => 'resolver',
-                'address' => 'quic://223.6.6.6',
-                'strategy' => 'ipv4_only',
-                'detour' => 'direct',
-            ],
-            [
-                'tag' => 'cloudflare',
-                'address' => 'tls://one.one.one.one',
-                'address_resolver' => 'resolver',
-                'address_strategy' => 'ipv4_only',
-                'strategy' => 'prefer_ipv6',
-                'detour' => 'select',
-            ],
-            [
-                'tag' => 'fakeip',
-                'address' => 'fakeip',
-            ],
-            [
-                'tag' => 'block',
-                'address' => 'rcode://refused',
-            ],
-        ],
-        'rules' => [
-            [
-                'outbound' => 'any',
-                'server' => 'local',
-            ],
-            [
-                'clash_mode' => 'Global',
-                'server' => 'cloudflare',
-            ],
-            [
-                'clash_mode' => 'Rule',
-                'rule_set' => 'geosite-geolocation-!cn',
-                'server' => 'cloudflare',
-            ],
-            [
-                'clash_mode' => 'Rule',
-                'rule_set' => 'geosite-cn',
-                'server' => 'fakeip',
-            ],
-            [
-                'clash_mode' => 'Direct',
-                'server' => 'local',
-            ],
-        ],
-        'final' => 'cloudflare',
-        'fakeip' => [
-            'enabled' => true,
-            'inet4_range' => '198.18.0.0/15',
-            'inet6_range' => 'fc00::/18',
-        ],
-        'disable_cache' => true,
-        'independent_cache' => true,
-    ],
-    'inbounds' => [
-        [
-            'type' => 'tun',
-            'tag' => 'in',
-            'address' => [
-                '172.18.0.1/30',
-                'fdfe:dcba:9876::1/126',
-            ],
-            'auto_route' => true,
-            'strict_route' => true,
-            'udp_timeout' => 60,
-            'stack' => 'mixed',
-        ],
-    ],
-    'outbounds' => [
-        [
-            'tag' => 'select',
-            'type' => 'selector',
-            'outbounds' => [
-                'auto',
-            ],
-            'default' => 'auto',
-            'interrupt_exist_connections' => true,
-        ],
-        [
-	    'tag' => 'auto',
-            'type' => 'urltest',           
-            'outbounds' => [],
-            'url' => 'https://cp.cloudflare.com/generate_204',
-            'interval' => '3m',
-            'tolerance' => 50,
-            'idle_timeout' => '30m',
-            'interrupt_exist_connections' => true,
-        ],
-        [
-            'type' => 'direct',
-            'tag' => 'direct',
-        ],
-    ],
-    'route' => [
-        'rules' => [
-            [
-                'inbound' => 'in',
-                'action' => 'sniff',
-                'timeout' => '1s',
-            ],
-            [
-                'protocol' => 'dns',
-                'action' => 'hijack-dns',
-            ],
-            [
-                'clash_mode' => 'Direct',
-                'outbound' => 'direct',
-            ],
-            [
-                'clash_mode' => 'Rule',
-                'rule_set' => [
-                    'geosite-geolocation-!cn',
-                ],
-                'outbound' => 'select',
-            ],
-            [
-                'clash_mode' => 'Rule',
-                'rule_set' => [
-                    'geosite-cn',
-                    'geoip-cn',
-                ],
-                'outbound' => 'direct',
-            ],
-            [
-                'clash_mode' => 'Global',
-                'outbound' => 'select',
-            ],
-            [
-                'protocol' => 'stun',
-                'action' => 'reject',
-                'method' => 'default',
-            ],
-            [
-                'ip_is_private' => true,
-                'outbound' => 'direct',
-            ],
-        ],
+
+    'rules' => [
+
+      // 广告域名直接拒绝
+      [
+        'rule_set' => ['geosite-category-ads-all'],
+        'action' => 'predefined',
+        'rcode' => 'REFUSED',
+      ],
+
+      // CN 域名 → 真实解析（关键）
+      [
         'rule_set' => [
-            [
-                'tag' => 'geoip-cn',
-                'type' => 'remote',
-                'format' => 'binary',
-                'url' => 'https://' . $_ENV['jsdelivr_url'] . '/gh/SagerNet/sing-geoip@rule-set/geoip-cn.srs',
-                'download_detour' => 'direct',
-                'update_interval' => '1d',
-            ],
-            [
-                'tag' => 'geosite-cn',
-                'type' => 'remote',
-                'format' => 'binary',
-                'url' => 'https://' . $_ENV['jsdelivr_url'] . '/gh/SagerNet/sing-geosite@rule-set/geosite-cn.srs',
-                'download_detour' => 'direct',
-                'update_interval' => '1d',
-            ],
-            [
-                'tag' => 'geosite-geolocation-!cn',
-                'type' => 'remote',
-                'format' => 'binary',
-                'url' => 'https://' . $_ENV['jsdelivr_url'] . '/gh/SagerNet/sing-geosite@rule-set/geosite-geolocation-!cn.srs',
-                'download_detour' => 'direct',
-                'update_interval' => '1d',
-            ],
+          'geosite-cn',
+          'geosite-geolocation-cn',
         ],
-        'final' => 'select',
-        'auto_detect_interface' => true,
-        'override_android_vpn' => true,
+        'server' => 'alidns',
+      ],
+
+      // 非 CN → fakeip（用于代理分流）
+      [
+        'rule_set' => ['geosite-geolocation-!cn'],
+        'server' => 'fakeip',
+      ],
+
     ],
-    'experimental' => [
-        'cache_file' => [
-            'enabled' => true,
-            'cache_id' => '',
-            'path' => 'cache.db',
+
+    // fallback
+    'final' => 'cloudflare',
+  ],
+
+  // ================= 入站 =================
+  'inbounds' => [
+    [
+      'type' => 'tun',
+      'tag' => 'in',
+      'address' => [
+        '172.18.0.1/30',
+        'fdfe:dcba:9876::1/126',
+      ],
+      'auto_route' => true,
+      'strict_route' => true,
+      'stack' => 'mixed',
+    ],
+  ],
+
+  // ================= 出站 =================
+  'outbounds' => [
+
+    // 手动/自动选择入口
+    [
+      'tag' => 'select',
+      'type' => 'selector',
+      'outbounds' => ['auto'],
+      'default' => 'auto',
+    ],
+
+    // 自动测速
+    [
+      'type' => 'urltest',
+      'tag' => 'auto',
+      'outbounds' => [],
+      'url' => 'https://cp.cloudflare.com/generate_204',
+      'interval' => '3m',
+      'tolerance' => 50,
+    ],
+
+    // 直连
+    [
+      'type' => 'direct',
+      'tag' => 'direct',
+    ],
+  ],
+
+  // ================= 路由 =================
+  'route' => [
+
+    'rules' => [
+	
+	  [
+		'inbound' => 'in',
+		'action' => 'sniff',
+		'timeout' => '1s',
+	  ],
+		
+	  [
+        'inbound' => 'in',
+        'protocol' => 'dns',
+        'port' => [
+            53,
+          ],
+        'action' => 'hijack-dns',
+      ],
+
+      // 劫持 DNS
+      [
+        'protocol' => 'dns',
+        'action' => 'hijack-dns',
+      ],
+
+      // 广告
+      [
+        'rule_set' => ['geosite-category-ads-all'],
+        'action' => 'reject',
+      ],
+
+      // CN 直连
+      [
+        'rule_set' => [
+          'geosite-cn',
+          'geosite-geolocation-cn',
         ],
+        'outbound' => 'direct',
+      ],
+      [
+        'rule_set' => ['geoip-cn'],
+        'outbound' => 'direct',
+      ],
+
+      // 其他走代理
+      [
+        'outbound' => 'select',
+      ],
     ],
+
+    // 规则集
+    'rule_set' => [
+
+      [
+        'tag' => 'geoip-cn',
+        'type' => 'remote',
+        'format' => 'binary',
+        'url' => 'https://fastly.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-cn.srs',
+        'update_interval' => '1d',
+      ],
+
+      [
+        'tag' => 'geosite-cn',
+        'type' => 'remote',
+        'format' => 'binary',
+        'url' => 'https://fastly.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-cn.srs',
+        'update_interval' => '1d',
+      ],
+
+      [
+        'tag' => 'geosite-geolocation-cn',
+        'type' => 'remote',
+        'format' => 'binary',
+        'url' => 'https://fastly.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-geolocation-cn.srs',
+        'update_interval' => '1d',
+      ],
+
+      [
+        'tag' => 'geosite-geolocation-!cn',
+        'type' => 'remote',
+        'format' => 'binary',
+        'url' => 'https://fastly.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-geolocation-!cn.srs',
+        'update_interval' => '1d',
+      ],
+
+      [
+        'tag' => 'geosite-category-ads-all',
+        'type' => 'remote',
+        'format' => 'binary',
+        'url' => 'https://fastly.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-category-ads-all.srs',
+        'update_interval' => '1d',
+      ],
+    ],
+	'auto_detect_interface' => true,
+    'final' => 'select',
+  ],
+
+  // ================= 缓存 =================
+  'experimental' => [
+    'cache_file' => [
+      'enabled' => true,
+      'path' => 'cache.db',
+    ],
+  ],
 ];
 
 $_ENV['Clash_Config'] = [
