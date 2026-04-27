@@ -106,7 +106,11 @@ $_ENV['SingBox_Config'] = [
         'rule_set' => ['geosite-geolocation-!cn'],
         'server' => 'fakeip',
       ],
-
+	  
+		// ✅ 兜底（核心！防止漏代理）
+      [
+        'server' => 'fakeip',
+      ],
     ],
 
     // fallback
@@ -158,21 +162,19 @@ $_ENV['SingBox_Config'] = [
 
   // ================= 路由 =================
   'route' => [
-
-    'rules' => [
 	
-	  [
-		'inbound' => 'in',
-		'action' => 'sniff',
-		'timeout' => '1s',
+    'rules' => [
+	  [ 
+	    'inbound' => 'in', 
+		'action' => 'sniff', 
+		'timeout' => '1s', 
 	  ],
-
       // 劫持 DNS
       [
-        'protocol' => 'dns',
-        'action' => 'hijack-dns',
-      ],
-
+		'inbound' => 'in',
+		'protocol' => 'dns',
+		'action' => 'hijack-dns',
+	  ],
       // 广告
       [
         'rule_set' => ['geosite-category-ads-all'],
@@ -253,6 +255,7 @@ $_ENV['SingBox_Config'] = [
     ],
   ],
 ];
+
 
 $_ENV['Clash_Config'] = [
     'port' => 7890,
