@@ -37,25 +37,54 @@ final class SingBox extends Base
                 case 1:
                     $ss_2022_port = $node_custom_config['offset_port_user'] ??
                         ($node_custom_config['offset_port_node'] ?? 443);
+					$host = $node_custom_config['host'] ?? '';	
                     $method = $node_custom_config['method'] ?? '2022-blake3-aes-128-gcm';
                     $user_pk = Tools::genSs2022UserPk($user->passwd, $method);
-
+					$server_key = $node_custom_config['server_key'] ?? '';
+					$allow_insecure = $node_custom_config['allow_insecure'] ?? true;
+					
                     if (! $user_pk) {
                         $node = [];
                         break;
                     }
-
-                    $server_key = $node_custom_config['server_key'] ?? '';
-
-                    $node = [
+					
+					$node = [
+						'tag' => $node_raw->name,
                         'type' => 'shadowsocks',
-                        'tag' => $node_raw->name,
-                        'server' => $node_raw->server,
-                        'server_port' => (int) $ss_2022_port,
-                        'method' => $method,
-                        'password' => $server_key === '' ? $user_pk : $server_key . ':' .$user_pk,
+                        'detour' => $node_raw->name . '-shadowtls',
+						'method' => $method, 
+                        'password' => $server_key === '' ? $user_pk : $server_key . ':' .$user_pk,												
                     ];
+                    $node_extra = [
+						'tag' => $node_raw->name . '-shadowtls',
+                        'type' => 'shadowtls',
+                        'server' => $node_raw->server,
+                        'server_port' => 443,
+                        'version' => 3,                     
+						'password' => '123456',
+						'tls' => [ 
+							'enabled' => true,
+                            'server_name' => $host,
+                            'utls' => [
+								'enabled' => true,
+								'fingerprint' => 'chrome',
+							],
+                        ],
+                    ];
+			
+					// 👉 先 push 主节点（让 selector 先看到它）
+					$nodes[] = $node;
+					$singbox_config['outbounds'][0]['outbounds'][] = $node['tag'];
+					$singbox_config['outbounds'][1]['outbounds'][] = $node['tag'];
 
+					// 👉 再 push shadowtls（底层链路）
+					$nodes[] = $node_extra;
+					$singbox_config['outbounds'][0]['outbounds'][] = $node_extra['tag'];
+					$singbox_config['outbounds'][1]['outbounds'][] = $node_extra['tag'];
+
+					// ⚠️ 阻止外部再 push 一次
+					$node = [];
+					
                     break;
                 case 2:
                     $tuic_port = $node_custom_config['offset_port_user'] ??
@@ -107,7 +136,6 @@ final class SingBox extends Base
 					if (isset($headers['Host']) && is_array($headers['Host'])) {
 						$headers['Host'] = $headers['Host'][0];
 					}
-
 					// =========================
 					// ✅ transport 按类型构建
 					// =========================
@@ -209,7 +237,6 @@ final class SingBox extends Base
 					if (isset($headers['Host']) && is_array($headers['Host'])) {
 						$headers['Host'] = $headers['Host'][0];
 					}
-
 					// =========================
 					// ✅ transport 按类型构建
 					// =========================
