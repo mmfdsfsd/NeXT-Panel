@@ -49,7 +49,7 @@ final class Cron
         (new DetectLog())->where('datetime', '<', time() - 86400 * 3)->delete();
         (new EmailQueue())->where('time', '<', time() - 86400)->delete();
         (new OnlineLog())->where('last_time', '<', time() - 86400)->delete();
-
+		(new LoginIp())->where('datetime', '<', time() - 86400 * 7)->delete();
         echo Tools::toDateTime(time()) . ' 数据库清理完成' . PHP_EOL;
     }
 
