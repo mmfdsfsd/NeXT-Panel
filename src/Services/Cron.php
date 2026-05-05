@@ -36,12 +36,18 @@ final class Cron
 {
     public static function cleanDb(): void
     {	
-		//删除7天之前的登录记录
-		$LoginIPexpire = time() - 86400 * 7;
+		//删除7天之前的登录记录		
 		DB::delete("
 		    DELETE FROM login_ip
 		    WHERE datetime < ?
-		", [$LoginIPexpire]);
+		", [time() - 86400 * 7]);
+
+		//删除30天前的未支付订单
+		DB::delete("
+			DELETE FROM paylist
+			WHERE status = 0
+			AND datetime < ?
+		", [time() - 86400 * 30]);
 		
         (new SubscribeLog())->where(
             'request_time',
