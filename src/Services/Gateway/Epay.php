@@ -181,23 +181,47 @@ final class Epay extends Base
         }
     }
 
-    public function notify($request, $response, $args): ResponseInterface
-    {
-        $epayNotify = new EpayNotify($this->epay);
-        $verify_result = $epayNotify->verifyNotify();
+	public function notify($request, $response, $args): ResponseInterface
+	{
+		//支付平台回调过来的所有参数收集起来，不管回调是：GET 请求（?a=1&b=2）或者 POST 表单提交
+		$data = $_REQUEST;
 
-        if ($verify_result) {
-            if ($_GET['trade_status'] === 'TRADE_SUCCESS') {
-                $this->postPayment($_GET['out_trade_no']);
+		// ✅ 根据支付类型切换配置（关键）
+		if (($data['type'] ?? '') === 'usdt') {
+			$this->epay['apiurl'] = 'https://baidu.com';
+			$this->epay['partner'] = '1000';
+			$this->epay['key'] = 'NDWNDoC63TRrA336t33dVTD6A993VDD3';
+		}
+
+		$epayNotify = new EpayNotify($this->epay);
+		$verify_result = $epayNotify->verifyNotify();
+
+		if ($verify_result && ($data['trade_status'] ?? '') === 'TRADE_SUCCESS') {
+			$this->postPayment($data['out_trade_no']);
+			return $response->write('success');
+		}
+
+		return $response->write('failed');
+	}
+
+	//原回调代码
+//   public function notify($request, $response, $args): ResponseInterface
+//  {
+//      $epayNotify = new EpayNotify($this->epay);
+//      $verify_result = $epayNotify->verifyNotify();
+
+//     if ($verify_result) {
+//         if ($_GET['trade_status'] === 'TRADE_SUCCESS') {
+//            $this->postPayment($_GET['out_trade_no']);
                 // EPay just fucking copied from Alipay's method of determining whether the payment is successful
                 // which is retarded
                 // https://pay.v8jisu.cn/doc.html
-                return $response->write('success');
-            }
-        }
+//            return $response->write('success');
+//        }
+//    }
 
-        return $response->write('failed');
-    }
+//    return $response->write('failed');
+// }
 
 	public function getPayStatus($request, $response, $args): ResponseInterface
 	{
