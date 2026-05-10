@@ -62,8 +62,17 @@ abstract class Base
 
         $invoice = (new Invoice())->where('id', $paylist?->invoice_id)->first();
 
-        if (($invoice?->status === 'unpaid' || $invoice?->status === 'partially_paid') &&
-            (int) $paylist?->total >= (int) $invoice?->price) {
+/** 	金额用了 int 强转（危险）会导致 0.99 → 0
+    *   if (($invoice?->status === 'unpaid' || $invoice?->status === 'partially_paid') &&
+    *       (int) $paylist?->total >= (int) $invoice?->price) 
+*/				
+		if (($invoice?->status === 'unpaid' || $invoice?->status === 'partially_paid') &&
+            bccomp(
+				(string) ($paylist?->total ?? '0'),
+				(string) ($invoice?->price ?? '0'),
+				2
+			) >= 0 ) 
+		{
             $invoice->status = 'paid_gateway';
             $invoice->update_time = time();
             $invoice->pay_time = time();
