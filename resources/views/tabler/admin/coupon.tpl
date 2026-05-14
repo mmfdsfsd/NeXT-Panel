@@ -104,7 +104,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn me-auto" data-bs-dismiss="modal">取消</button>
                     <button id="create-button" onclick="createCoupon()"
-                            type="button" class="btn btn-primary" data-bs-dismiss="modal">创建
+                            type="button" class="btn btn-primary">创建
                     </button>
                 </div>
             </div>
@@ -144,72 +144,135 @@
         }
 
         function createCoupon() {
-            $.ajax({
-                url: '/admin/coupon',
-                type: 'POST',
-                dataType: "json",
-                data: {
-                    {foreach $details['create_dialog'] as $detail}
-                    {$detail['id']}: $('#{$detail['id']}').val(),
-                    {/foreach}
-                    expire_time: $('#expire_time').val(),
-                },
-                success: function (data) {
-                    if (data.ret === 1) {
-                        $('#success-message').text(data.msg);
-                        $('#success-dialog').modal('show');
-                        reloadTableAjax();
-                    } else {
-                        $('#fail-message').text(data.msg);
-                        $('#fail-dialog').modal('show');
-                    }
-                }
-            })
-        }
+
+			$.ajax({
+				url: '/admin/coupon',
+				type: 'POST',
+				dataType: "json",
+
+				data: {
+					{foreach $details['create_dialog'] as $detail}
+					{$detail['id']}: $('#{$detail['id']}').val(),
+					{/foreach}
+					expire_time: $('#expire_time').val(),
+				},
+
+				success: function (data) {
+
+					if (data.ret === 1) {
+
+						// 成功后关闭创建窗口
+						$('#create-dialog').modal('hide');
+
+						$('#success-message').text(data.msg);
+						$('#success-dialog').modal('show');
+
+						reloadTableAjax();
+
+					} else {
+
+						$('#fail-message').text(data.msg);
+						$('#fail-dialog').modal('show');
+
+					}
+				},
+
+				error: function () {
+
+					$('#fail-message').text('请求失败');
+					$('#fail-dialog').modal('show');
+
+				}
+			});
+		}
 
         function deleteCoupon(coupon_id) {
-            $('#notice-message').text('确定删除此优惠码？');
-            $('#notice-dialog').modal('show');
-            $('#notice-confirm').off('click').on('click', function () {
-                $.ajax({
-                    url: "/admin/coupon/" + coupon_id,
-                    type: 'DELETE',
-                    dataType: "json",
-                    success: function (data) {
-                        if (data.ret === 1) {
-                            $('#success-message').text(data.msg);
-                            $('#success-dialog').modal('show');
-                            reloadTableAjax();
-                        } else {
-                            $('#fail-message').text(data.msg);
-                            $('#fail-dialog').modal('show');
-                        }
-                    }
-                })
-            });
-        }
+
+			$('#notice-message').text('确定删除此优惠码？');
+			$('#notice-dialog').modal('show');
+
+			$('#notice-confirm')
+				.off('click')
+				.on('click', function () {
+
+					// 先关闭确认框
+					$('#notice-dialog').modal('hide');
+
+					$.ajax({
+						url: "/admin/coupon/" + coupon_id,
+						type: 'DELETE',
+						dataType: "json",
+
+						success: function (data) {
+
+							if (data.ret === 1) {
+
+								$('#success-message').text(data.msg);
+								$('#success-dialog').modal('show');
+
+								reloadTableAjax();
+
+							} else {
+
+								$('#fail-message').text(data.msg);
+								$('#fail-dialog').modal('show');
+
+							}
+						},
+
+						error: function () {
+
+							$('#fail-message').text('请求失败');
+							$('#fail-dialog').modal('show');
+
+						}
+					});
+				});
+		}
 
         function disableCoupon(coupon_id) {
-            $('#notice-message').text('确定禁用此优惠码？');
-            $('#notice-dialog').modal('show');
-            $('#notice-confirm').off('click').on('click', function () {
-                $.ajax({
-                    url: "/admin/coupon/" + coupon_id + "/disable",
-                    type: 'POST',
-                    dataType: "json",
-                    success: function (data) {
-                        if (data.ret === 1) {
-                            $('#success-dialog').text(data.msg);
-                            $('#success-message').modal('show');
-                            reloadTableAjax();
-                        } else {
-                            $('#fail-message').text(data.msg);
-                            $('#fail-dialog').modal('show');
-                        }
-                    }
-                })
-            });
-        }
+
+			$('#notice-message').text('确定禁用此优惠码？');
+			$('#notice-dialog').modal('show');
+
+			$('#notice-confirm')
+				.off('click')
+				.on('click', function () {
+
+					// 先关闭确认框
+					$('#notice-dialog').modal('hide');
+
+					$.ajax({
+						url: "/admin/coupon/" + coupon_id + "/disable",
+						type: 'POST',
+						dataType: "json",
+
+						success: function (data) {
+
+							if (data.ret === 1) {
+
+								$('#success-message').text(data.msg);
+								$('#success-dialog').modal('show');
+
+								reloadTableAjax();
+
+							} else {
+
+								$('#fail-message').text(data.msg);
+								$('#fail-dialog').modal('show');
+
+							}
+						},
+
+						error: function () {
+
+							$('#fail-message').text('请求失败');
+							$('#fail-dialog').modal('show');
+
+						}
+					});
+				});
+		}
 
         function reloadTableAjax() {
             table.ajax.reload(null, false);
