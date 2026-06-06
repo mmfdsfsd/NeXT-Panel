@@ -86,7 +86,14 @@ final class Stripe extends Base
         }
 
         $pl->gateway = self::_readableName();
-        $pl->save();
+        //$pl->save();
+		// 执行且仅执行一次，立刻捕获其生死状态
+		if (! $pl->save()) {
+		    return $response->withJson([
+		        'ret' => 0,
+		        'msg' => '创建本地支付单失败，请重试',
+		    ]);
+		}
 
         $stripe_currency = Config::obtain('stripe_currency');
 
