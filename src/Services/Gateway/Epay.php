@@ -111,8 +111,14 @@ final class Epay extends Base
         };
 
         $pl->gateway = self::_readableName() . ' ' . $type_text;
-
-        $pl->save();
+        //$pl->save();
+		// 确保真正落库，若失败则绝不请求上游网关
+        if (! $pl->save()) {
+            return $response->withJson([
+                'ret' => 0,
+                'msg' => '创建本地支付单失败，请重试',
+            ]);
+        }
         //请求参数
         $data = [
             'pid' => trim($this->epay['partner']),
