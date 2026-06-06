@@ -92,7 +92,20 @@ final class InvoiceController extends BaseController
                 'msg' => '账单不存在',
             ]);
         }
-
+        
+        // ==============================
+        // === 修复开始：防止余额足够多时重复支付 ===
+        // ==============================
+        if (in_array($invoice->status, ['paid_balance', 'paid_gateway'])) {
+            return $response->withJson([
+                'ret' => 0,
+                'msg' => '该账单已支付，请勿重复付款！',
+            ]);
+        }
+        // ==============================
+        // === 修复结束 ===
+        // ==============================
+        
         $user = $this->user;
 
         if ($user->is_shadow_banned) {
