@@ -91,7 +91,7 @@ final class Clash extends Base
 						case 'shadow-tls':
 							$plugin_option = [
 								'host' => 'captive.apple.com',
-								'password' => '123456',
+								'password' => 123456,
 								'version' => 3,
 							];
 							break;
